@@ -87,7 +87,7 @@ public void purchaseCoupon(Coupon coupon) {
  * returns a list of all customer coupons 
  * @see 		DB.CouponDBDAO
  * @see			JavaBeans.Coupon
- * @see			DB.CustomerDBDAO
+ * @see			DB.CustomerDAO
  * @return 		ArrayList of coupons belonging to this customer	
  * @throws 		customer has no coupons
  */

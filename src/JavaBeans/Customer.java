@@ -3,9 +3,7 @@ package JavaBeans;
 public class Customer {
 		private String lastName;
 		private String firstName;
-		private String email;
-	    private String password;
-	    private int id;
+	    private int customerId;
 	    
 	    public String getLastName() {
 			return lastName;
@@ -19,29 +17,12 @@ public class Customer {
 		public void setFirstName(String first_name) {
 			this.firstName = first_name;
 		}
-		public String getEmail() {
-			return email;
+		
+		public int getCustomerId() {
+			return customerId;
 		}
-		public void setEmail(String email) {
-			if (email.indexOf(".")>email.indexOf("@"))
-		        this.email = email;
-		    	else
-		    	{
-		    		System.out.println("invalid mail");	
-
-		    	}
-		}
-		public String getPassword() {
-			return password;
-		}
-		public void setPassword(String password) {
-			this.password = password;
-		}
-		public int getId() {
-			return id;
-		}
-		public void setId(int id) {
-			this.id = id;
+		public void setCustomerId(int id) {
+			this.customerId = id;
 		}
 		
 		
@@ -49,9 +30,7 @@ public class Customer {
 			super();
 			this.setLastName(lastName);
 			this.setFirstName(firstName);
-			this.setEmail(email);
-			this.setPassword(password);
-			this.setId(id);
+			this.setCustomerId(id);
 		}
 
 		

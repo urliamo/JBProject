@@ -1,4 +1,4 @@
-package JavaBeans;
+package Enums;
 
 public enum Categories {
 	

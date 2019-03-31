@@ -82,7 +82,7 @@ public class AdminFacade extends ClientFacade{
 					throw new Exception("Company does not exist!");
 				}
 				
-			if (companiesDBDAO.getOneCompany(company.getId()).getName()!= company.getName()) {
+			if (companiesDBDAO.getCompanyByID(company.getId()).getName()!= company.getName()) {
 				throw new Exception("Company name cannot be changed!");
 			}
 			else {
@@ -152,7 +152,7 @@ public class AdminFacade extends ClientFacade{
 		 * @return		Company object with the company data of the specified ID.
 		 */
 		public Company getCompany(int id) throws Exception{
-			return companiesDBDAO.getOneCompany(id);
+			return companiesDBDAO.getCompanyByID(id);
 		}
 		/**
 		 *adds a new customer to the DB.
@@ -164,7 +164,7 @@ public class AdminFacade extends ClientFacade{
 		 */
 		public void addCustomer(Customer customer) {
 			try {
-				if (customerDBDAO.isCustomerExists(customer.getEmail())){
+				if (customerDBDAO.isCustomerExistsByMail(customer.getEmail())){
 					throw new Exception("Customer with this email already exists!");
 				}
 				customerDBDAO.addCustomer(customer);

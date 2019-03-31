@@ -5,15 +5,15 @@ package Clients;
  *
  * @param  password hard-coded admin password for test
  * @param email hard-coded admin email for test
- * @see         DB.CompaniesDBDAO
- * @see 		DB.CustomerDBDAO
- * @see			DB.CouponsDBDAO
+ * @see         DB.CompaniesDAO
+ * @see 		DB.CustomerDAO
+ * @see			DB.CouponsDAO
  */
 public abstract class ClientFacade {
 	
-	protected  DB.CompaniesDBDAO companiesDBDAO= new DB.CompaniesDBDAO();
-	protected  DB.CustomerDBDAO customerDBDAO= new DB.CustomerDBDAO();
-	protected  DB.CouponsDBDAO couponsDBDAO= new DB.CouponsDBDAO();
+	protected  DB.CompaniesDAO companiesDBDAO= new DB.CompaniesDAO();
+	protected  DB.CustomerDAO customerDBDAO= new DB.CustomerDAO();
+	protected  DB.CouponsDAO couponsDBDAO= new DB.CouponsDAO();
 
 	/**
 	 * login function to be implemented by each facade type.

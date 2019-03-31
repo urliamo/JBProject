@@ -62,8 +62,12 @@ public class ConnectionPool {
 			}
 			
 			for (Connection conn : connections) {
-				try { conn.close(); } catch (Exception e) {
-					 System.out.println(e.getMessage());
+				try { 
+					conn.close(); 
+					} 
+				catch (SQLException e) 
+				{
+					e.printStackTrace();
 
 				}
 			}			

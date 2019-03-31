@@ -48,8 +48,8 @@ public class CompanyFacade extends ClientFacade {
 	}
 
 
-	public void setCompanyID(int companyID) {
-		this.companyID = companyID;
+	public void setCompanyID(long l) {
+		this.companyID = l;
 	}
 
 	public CompanyFacade() {
@@ -206,6 +206,6 @@ public class CompanyFacade extends ClientFacade {
 	 */
 	//return the logged-in company
 	public Company getCompany() throws Exception{
-		return companiesDBDAO.getOneCompany(companyID);
+		return companiesDBDAO.getCompanyByID(companyID);
 	}
 }

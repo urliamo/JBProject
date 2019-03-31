@@ -49,10 +49,29 @@ public static void buildDB() {
 		
 		connection = DriverManager.getConnection(URL+"JB",USERNAME,PASSWORD);
 		statement = connection.createStatement();	
-
+		
+		// Create string for statement including users table creation
+		 sql = "CREATE TABLE users ("+
+		"ID bigint PRIMARY KEY NOT NULL AUTO_INCREMENT,"+
+		" password VARCHAR(50) NOT NULL,"+
+		" email VARCHAR(50) NOT NULL,"+
+		" companyID VARCHAR(50),"+
+		" Type VARCHAR(50) NOT NULL,"+
+		"FOREIGN KEY (companyID) REFERENCES companies(companyID))";
+		
+		
+		
+		//Execute create companies table statement
+		
+		statement.executeUpdate(sql);
+		
+		System.out.println("companies table has been created.");	
 				
 		// Create string for statement including companies table creation
-		 sql = "CREATE TABLE companies (id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(50) NOT NULL, password VARCHAR(50) NOT NULL, email VARCHAR(50) NOT NULL)";
+		 sql = "CREATE TABLE companies ("+
+		"companyID BIGINT PRIMARY KEY NOT NULL AUTO_INCREMENT,"+
+		"name VARCHAR(50) NOT NULL,"+
+		"email VARCHAR(50) NOT NULL,";
 		
 		
 		
@@ -65,11 +84,10 @@ public static void buildDB() {
 		// Change string for statement to include customers table creation
 				
 		sql = "CREATE TABLE customers (" +
-					"id INT PRIMARY KEY AUTO_INCREMENT, " +
+					"customerID BIGINT PRIMARY KEY, " +
 					"first_name VARCHAR(50) NOT NULL, " +
 					"last_name VARCHAR(50) NOT NULL, " +
-					"password VARCHAR(50) NOT NULL, " +
-					"email VARCHAR(50) NOT NULL)";
+					"FOREIGN KEY (customerID) REFERENCES users(ID))";
 				
 		//Execute create customers table statement
 
@@ -81,7 +99,7 @@ public static void buildDB() {
 		// Change string for statement to include categories table creation
 		
 		sql = "CREATE TABLE categories (" +
-					"id INT PRIMARY KEY AUTO_INCREMENT, " +
+					"categoryID INT PRIMARY KEY AUTO_INCREMENT, " +
 					"name VARCHAR(50) NOT NULL)";
 				
 		//Execute create categories table statement
@@ -93,7 +111,7 @@ public static void buildDB() {
 		sql = "insert into categories(name) Values";
 		
 		//add each category under Categories class to the string
-		for (JavaBeans.Categories c : JavaBeans.Categories.values())
+		for (Enums.Categories c : Enums.Categories.values())
 		{
 			sql+="('"+c.toString()+"'),";
 		}
@@ -109,9 +127,9 @@ public static void buildDB() {
 		// Change string for statement to include coupons table creation
 		
 				sql = "CREATE TABLE coupons (" +
-							"id INT PRIMARY KEY AUTO_INCREMENT, " +
-							"company_id INT NOT NULL, " +
-							"category_id INT NOT NULL, " +
+							"couponID BIGINT PRIMARY KEY AUTO_INCREMENT, " +
+							"companyID BIGINT NOT NULL, " +
+							"categoryID BIGINT NOT NULL, " +
 							"title VARCHAR(50) NOT NULL, " +
 							"description VARCHAR(100) NOT NULL, " +
 							"image VARCHAR(50) NOT NULL, " +
@@ -119,8 +137,8 @@ public static void buildDB() {
 							"price DOUBLE NOT NULL, " +
 							"start_date DATE NOT NULL, " +
 							"end_date DATE NOT NULL, " +
-							"FOREIGN KEY (company_id) REFERENCES companies(id)," +
-							"FOREIGN KEY (category_id) REFERENCES categories(id))";
+							"FOREIGN KEY (companyID) REFERENCES companies(companyID)," +
+							"FOREIGN KEY (categoryID) REFERENCES categories(categoryID))";
 						
 				//Execute create coupons table statement
 
@@ -130,14 +148,24 @@ public static void buildDB() {
 
 				
 					// Change string for statement to include customers_vs_coupons table creation
-				
-				sql = "CREATE TABLE jb.customers_vs_coupons (customer_id INT , coupon_id INT , PRIMARY KEY (customer_id, coupon_id), FOREIGN KEY (customer_id) REFERENCES customers(id), FOREIGN KEY (coupon_id) REFERENCES coupons(id))";
+				sql = "CREATE TABLE jb.purchases ("+
+					"PurchaseID BIGINT PRIMARY KEY AUTO_INCREMENT NOT NULL,"+
+					"customerID BIGINT NOT NULL,"+
+					"couponID BIGINT NOT NULL,"+
+					"amount INT NOT NULL,"+
+					"PRIMARY KEY (PurchaseID),"+
+					"FOREIGN KEY (customerID) REFERENCES customers(customerID),"+
+					"FOREIGN KEY (couponID) REFERENCES coupons(couponID))";
+			
+
+				//--old customer VS coupons--
+				//sql = "CREATE TABLE jb.customers_vs_coupons (customerID INT , couponID INT , PRIMARY KEY (customerID, couponID), FOREIGN KEY (customerID) REFERENCES customers(customerID), FOREIGN KEY (couponID) REFERENCES coupons(couponID))";
 						
-				//Execute create customers_vs_coupons table statement
+				//Execute create purchases table statement
 
 				statement.executeUpdate(sql);
 						
-				System.out.println("customers_vs_coupons table has been created.");
+				System.out.println("purchases table has been created.");
 	}
 	catch(Exception ex) {
 		 System.out.println(ex.getMessage());

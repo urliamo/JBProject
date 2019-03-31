@@ -1,5 +1,7 @@
 package Clients;
 
+import Enums.ClientType;
+
 /**
  * class responsible to return a client facade of type relevant to use logging in.
  *

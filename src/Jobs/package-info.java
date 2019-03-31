@@ -1,8 +1,0 @@
-/**
- * 
- */
-/**
- * @author Minor
- *
- */
-package Jobs;

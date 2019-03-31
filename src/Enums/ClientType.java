@@ -1,4 +1,4 @@
-package Clients;
+package Enums;
 /**
  * enumerator containing client types.
  * 
