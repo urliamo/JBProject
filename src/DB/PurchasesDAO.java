@@ -6,16 +6,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Locale.Category;
 
+
+import Utils.JdbcUtils;
+
+import JavaBeans.Purchase;
 import Enums.ErrorType;
 import Exceptions.ApplicationException;
-import JavaBeans.Coupon;
 import Utils.DateUtils;
 
 public class PurchasesDAO {
 
-	private ConnectionPool connectionPool = ConnectionPool.getInstance();
 	/**
 	 *  returns true if coupon  with specified ID belonging to customer with specified ID exists
 	 *
@@ -24,18 +27,19 @@ public class PurchasesDAO {
 	 * @return		true if coupon belongs to customer
 	 */
 	
-	public boolean isCouponPurchaseExists(long customerID,long couponID) throws Exception {
+	public boolean isCouponPurchaseExists(long customerID,long couponID) throws ApplicationException {
 
 		Connection connection = null;
+		PreparedStatement preparedStatement = null;
 
 		try {
-			connection = connectionPool.getConnection();
+				connection = JdbcUtils.getConnection();
 
-			String sql = String.format(
+				String sql = String.format(
 					"SELECT *  FROM purchases WHERE CUSTOMERID = ? AND COUPONID = ?",
 					customerID,couponID);
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+				preparedStatement = connection.prepareStatement(sql);
 
 				ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -57,7 +61,7 @@ public class PurchasesDAO {
 					+" check purchase exists failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement);
 		}
 	}
 	/**
@@ -66,12 +70,69 @@ public class PurchasesDAO {
 	 * @param  couponID the ID of the coupon to be removed from the DB
 	 * @param  customerID the ID of the customer the coupon should be removed from
 	 */
-	public void deleteCouponPurchase(int couponID, int customerID) throws Exception {
+	
+	public Collection<Purchase> getAllPurchasesByCoupon(long couponID) throws ApplicationException {
 		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet result = null;
 
 		try {
+			connection = JdbcUtils.getConnection();
+			String getAllPurchasesByCoupon = "SELECT * FROM purchases WHERE coupon_id=?";
+			preparedStatement = connection.prepareStatement(getAllPurchasesByCoupon);
+			preparedStatement.setLong(1, couponID);
+			result = preparedStatement.executeQuery();
 
-			connection = connectionPool.getConnection();
+			Collection<Purchase> allPurchasesByCoupon = new ArrayList<>();
+
+			while (result.next()) {
+				allPurchasesByCoupon.add(extractPurchaseFromResultSet(result));
+			}
+
+			return allPurchasesByCoupon;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
+					+" get all purchases by coupon failed");
+		}  finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
+	}
+	public Collection<Purchase> getAllPurchasesbyCustomer(long customerID) throws ApplicationException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet result = null;
+
+		try {
+			connection = JdbcUtils.getConnection();
+			String getAllPurchasesByCustomer = "SELECT * FROM purchases WHERE customer_id=?";
+			preparedStatement = connection.prepareStatement(getAllPurchasesByCustomer);
+			preparedStatement.setLong(1, customerID);
+			result = preparedStatement.executeQuery();
+
+			Collection<Purchase> allPurchasesByCustomer = new ArrayList<>();
+
+			while (result.next()) {
+				allPurchasesByCustomer.add(extractPurchaseFromResultSet(result));
+			}
+
+			return allPurchasesByCustomer;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
+					+" get all purchases by customer failed");
+		}  finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
+	}
+	public void deleteCouponPurchase(int couponID, int customerID) throws ApplicationException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		try {
+
+			connection = JdbcUtils.getConnection();
 			String sql;
 			
 			//set string for all customers with coupon
@@ -88,7 +149,7 @@ public class PurchasesDAO {
 			else {
 			 sql = String.format("DELETE FROM PURCHASES WHERE CUSTOMER_ID=? AND COUPON_ID=?", customerID, couponID);
 			}
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 			if (customerID==-1)
 			{
 				preparedStatement.setLong(1,couponID);
@@ -116,7 +177,7 @@ public class PurchasesDAO {
 					+" delete purchases failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement);
 		}
 		
 	}
@@ -126,25 +187,19 @@ public class PurchasesDAO {
 	 * @param couponID the ID of the coupon to be purchased by the customer
 	 * @param customerID the ID of the customer the coupon should be added to
 	 */
-	public long addCouponPurchase(long CouponID, long CustomerID, int amount) throws Exception {
+	public long addCouponPurchase(long CouponID, long CustomerID, int amount) throws ApplicationException {
 		Connection connection = null;
-
+		ResultSet resultSet = null;
+		PreparedStatement preparedStatement = null;
 		try {
-
-			connection = connectionPool.getConnection();
-			
-			String sql = String.format("INSERT INTO CUSTOMERS_VS_COUPONS(CUSTOMER_ID, COUPON_ID, AMOUNT) " + 
-					"VALUES(?, ?, ?)");
-
-			PreparedStatement preparedStatement = 
-					connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
-			
+				connection = JdbcUtils.getConnection();
+				String sql = String.format("INSERT INTO CUSTOMERS_VS_COUPONS(CUSTOMER_ID, COUPON_ID, AMOUNT) " + "VALUES(?, ?, ?)");
+				preparedStatement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
 				preparedStatement.setLong(1,CustomerID);
 				preparedStatement.setLong(2,CouponID);
 				preparedStatement.setInt(3,amount);
-
 				preparedStatement.executeUpdate();
-				ResultSet resultSet = preparedStatement.getGeneratedKeys();
+				resultSet = preparedStatement.getGeneratedKeys();
 				if (resultSet.next()) {
 					long id = resultSet.getLong(1);
 					
@@ -164,8 +219,66 @@ public class PurchasesDAO {
 					+" add purchase failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
 		
+	}
+	
+	public void deletePurchaseBycouponId(long couponId) throws ApplicationException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+
+		try {
+			connection = JdbcUtils.getConnection();
+			String delete = "DELETE FROM purchases WHERE coupon_id=?";
+			preparedStatement = connection.prepareStatement(delete);
+			preparedStatement.setLong(1, couponId);
+			preparedStatement.executeUpdate();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
+					+" delete purchase by coupon ID failed");
+		} finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
+	}
+	
+	public Collection<Purchase> getAllPurchases() throws ApplicationException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet result = null;
+
+		try {
+			connection = JdbcUtils.getConnection();
+			String getAllPurchases = "SELECT * FROM purchases";
+			preparedStatement = connection.prepareStatement(getAllPurchases);
+			result = preparedStatement.executeQuery();
+
+			Collection<Purchase> allPurchases = new ArrayList<>();
+
+			while (result.next()) {
+				allPurchases.add(extractPurchaseFromResultSet(result));
+			}
+
+			return allPurchases;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
+					+" get all purchases failed");
+		} finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
+	}
+	
+	
+	private Purchase extractPurchaseFromResultSet(ResultSet result) throws SQLException{
+		Purchase purchase = new Purchase();
+		purchase.setPurchaseID(result.getLong("purchase_id"));
+		purchase.setCustomerID(result.getLong("customer_id"));
+		purchase.setCouponID(result.getLong("coupon_id"));
+		purchase.setAmount(result.getInt("amount"));
+		return purchase;
 	}
 }

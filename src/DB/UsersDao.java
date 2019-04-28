@@ -5,6 +5,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import Utils.JdbcUtils;
 
 import Enums.ClientType;
 import JavaBeans.User;
@@ -15,16 +18,15 @@ import Utils.DateUtils;
 
 public class UsersDao {
 	
-	private ConnectionPool connectionPool = ConnectionPool.getInstance();
 
-	public long createUser(User user) throws ApplicationException, InterruptedException {
+	public long createUser(User user) throws ApplicationException {
 		//Turn on the connections
 		Connection connection=null;
 		PreparedStatement preparedStatement=null;
-
+		ResultSet resultSet = null;
 		try {
 			//Establish a connection from the connection manager
-			connection=connectionPool.getConnection();
+			connection=JdbcUtils.getConnection();
 
 			//Creating the SQL query
 			//CompanyID is defined as a primary key and auto incremented
@@ -36,7 +38,7 @@ public class UsersDao {
 				sqlStatement="INSERT INTO Users (user, password, type) VALUES(?,?,?)";
 			}
 			else {
-				sqlStatement="INSERT INTO Users (user, password, type, CompanyID ) VALUES(?,?,?, ?)";
+				sqlStatement="INSERT INTO Users (user, password, type, CompanyID ) VALUES(?,?,?,?)";
 			}
 
 			//Combining between the syntax and our connection
@@ -55,68 +57,172 @@ public class UsersDao {
 			//Executing the update
 			preparedStatement.executeUpdate();
 			
-			ResultSet resultSet = preparedStatement.getGeneratedKeys();
+		    resultSet = preparedStatement.getGeneratedKeys();
 			if (resultSet.next()) {
 				long id = resultSet.getLong(1);
 				
 				return id;
 			}
-			else
-			{
 			throw new ApplicationException(ErrorType.GENERAL_ERROR, "Failed to create user id");
-			}
+		
 			
 		} catch (SQLException e) {
 			e.printStackTrace();
 			//If there was an exception in the "try" block above, it is caught here and notifies a level above.
-			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
-					+" Create company failed");
+			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime() +" Create User failed");
 		} 
 		finally {
 			//Closing the resources
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
 	}
+	public void deleteUserByMail(String userEmail) throws ApplicationException {
 
-	public boolean isUserExistsByName(String userName) throws ApplicationException, InterruptedException {
 		Connection connection=null;
 		PreparedStatement preparedStatement=null;
-		ResultSet result=null;
+
 
 		try {
-			//Establish a connection from the connection manager
-			connection=connectionPool.getConnection();
+			connection = JdbcUtils.getConnection();
+			String delete = "DELETE FROM users WHERE user_email=?";
+			preparedStatement = connection.prepareStatement(delete);
+			preparedStatement.setString(1, userEmail);
+			preparedStatement.executeUpdate();
 
-			//Creating the SQL query
-			String sqlStatement="SELECT * FROM Users WHERE user_name = ?";
-
-			//Combining between the syntax and our connection
-			preparedStatement=connection.prepareStatement(sqlStatement);
-
-			//Replacing the question marks in the statement above with the relevant data
-			preparedStatement.setString(1, userName);
-
-			//Executing the query and saving the DB response in the resultSet.
-			result=preparedStatement.executeQuery();
-
-			if (!result.next()) {
-				return false;
-			}
-			return true;
 		} catch (SQLException e) {
-			//If there was an exception in the "try" block above, it is caught here and notifies a level above.
-			throw new ApplicationException( e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
-					+" Failed to check if user exists by name");
-		}
+			e.printStackTrace();
+			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime() + "failed to delete the user");
+		} 
 		finally {
-			//Closing the resources
-			connectionPool.restoreConnection(connection);
-		}
-
+			JdbcUtils.closeResources(connection, preparedStatement);		
+			}
 	}
 	
+	public void deleteUserByID(long userID) throws ApplicationException {
+		
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		
+		try {
+			connection = JdbcUtils.getConnection();
+			String delete = "DELETE FROM users WHERE user_id=?";
+			preparedStatement = connection.prepareStatement(delete);
+			preparedStatement.setLong(1, userID);
+			preparedStatement.executeUpdate();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime() + "failed to delete the user");
+		} 
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
+	}
+	public void updateUser(User user) throws ApplicationException {
+
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+
+		try {
+			connection = JdbcUtils.getConnection();
+			long userID = user.getId();
+			String update = "UPDATE users SET user_Email=?, password=?, client_type=?, company_id=? WHERE user_id=?";
+			preparedStatement = connection.prepareStatement(update);
+			preparedStatement.setString(1, user.getEmail());
+			preparedStatement.setString(2, user.getPassword());
+			preparedStatement.setString(3, user.getType().name());
+			preparedStatement.setLong(4, user.getCompanyId());
+			preparedStatement.setLong(5, userID);
+			preparedStatement.executeUpdate();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime() + "dailed to update user information");
+		}  finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
+	}
 	
-	public ClientType login(String user, String password) throws ApplicationException, InterruptedException {
+	public void deleteCompanysUsers(long companyID) throws ApplicationException {
+
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+
+		try {
+			connection = JdbcUtils.getConnection();
+			String delete = "DELETE FROM users WHERE company_ID=?";
+			preparedStatement = connection.prepareStatement(delete);
+			preparedStatement.setLong(1, companyID);
+			preparedStatement.executeUpdate();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new ApplicationException( e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
+					+" Failed delete users");
+		} finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
+	}
+	
+	public Collection<User> getAllUsersByType(ClientType type) throws ApplicationException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet result = null;
+
+		try {
+			connection = JdbcUtils.getConnection();
+			String getAllCompanies = "SELECT * FROM users WHERE client_type=?";
+			preparedStatement = connection.prepareStatement(getAllCompanies);
+			preparedStatement.setString(1, type.name());
+			result = preparedStatement.executeQuery();
+
+			Collection<User> allUsers = new ArrayList<>();
+
+			while (result.next()) {
+				allUsers.add(extractUserFromResultSet(result));
+			}
+
+			return allUsers;
+			}
+			catch (SQLException exception)
+			{
+				exception.printStackTrace();
+				throw new ApplicationException( exception, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
+						+" get All Users by Type failed");
+			} finally
+			{
+			JdbcUtils.closeResources(connection, preparedStatement);
+			}
+	}
+	public Collection<User> getAllUsers() throws ApplicationException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet result = null;
+
+		try {
+			connection = JdbcUtils.getConnection();
+			String getAllCompanies = "SELECT * FROM users";
+			preparedStatement = connection.prepareStatement(getAllCompanies);
+			result = preparedStatement.executeQuery();
+
+			Collection<User> allUsers = new ArrayList<>();
+
+			while (result.next()) {
+				allUsers.add(extractUserFromResultSet(result));
+			}
+
+			return allUsers;
+
+		}catch (SQLException exception) {
+			exception.printStackTrace();
+			throw new ApplicationException( exception, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
+					+" get All Users failed");
+		} finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
+	}
+	
+	public ClientType login(String user, String password) throws ApplicationException {
 		//Turn on the connections
 		Connection connection=null;
 		PreparedStatement preparedStatement=null;
@@ -124,7 +230,7 @@ public class UsersDao {
 
 		try {
 			//Establish a connection from the connection manager
-			connection=connectionPool.getConnection();
+			connection = JdbcUtils.getConnection();
 
 			//Creating the SQL query
 			String sqlStatement="SELECT * FROM Users WHERE user_name = ? && password = ?";
@@ -146,15 +252,26 @@ public class UsersDao {
 			
 			ClientType clientType = ClientType.valueOf(result.getString("type"));
 			return clientType;
-		} catch (SQLException e) {
+		} catch (SQLException exception) {
+			exception.printStackTrace();
 			//If there was an exception in the "try" block above, it is caught here and notifies a level above.
-			throw new ApplicationException( e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
-					+" Get company has failed");
+			throw new ApplicationException( exception, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
+					+" login failed");
 		}
 		finally {
 			//Closing the resources
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, result);
 		}
 	}
+	
+	private User extractUserFromResultSet(ResultSet result) throws SQLException {
+		User user = new User();
+		user.setId(result.getLong("user_id"));
+		user.setEmail(result.getString("user_email"));
+		user.setPassword(result.getString("password"));
+		user.setType(ClientType.valueOf(result.getString("client_type")));
+		user.setCompanyId(result.getLong("company_id"));
 
+		return user;
+	}
 }

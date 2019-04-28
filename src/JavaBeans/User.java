@@ -5,23 +5,25 @@ import Enums.ClientType;
 public class User {
 	
 	private long id;
+	private String email;
 	private String userName;
 	private String password;
 	private Long companyId;
 	private ClientType type;
 	
-	public User(long id, String userName, String password, Long companyId, ClientType type) {
-		this(userName, password, companyId, type);
+	public User(long id,String email, String userName, String password, Long companyId, ClientType type) {
+		this(userName, email, password, companyId, type);
 		this.id = id;
 	}
 	
-	public User(String userName, String password, Long companyId, ClientType type) {
-		this(userName, password, type);
+	public User(String userName,String email, String password, Long companyId, ClientType type) {
+		this(userName,email, password, type);
 		this.companyId = companyId;
 	}
 	
-	public User(String userName, String password, ClientType type) {
+	public User(String userName, String email, String password, ClientType type) {
 		super();
+		this.email= email;
 		this.userName = userName;
 		this.password = password;
 		this.companyId = null;
@@ -69,6 +71,14 @@ public class User {
 
 	public void setType(ClientType type) {
 		this.type = type;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
 
 	
