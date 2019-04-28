@@ -1,4 +1,4 @@
-package Clients;
+package Logic;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import JavaBeans.Customer;
  * @see         JavaBeans.Customer
  * @see 		JavaBeans.Coupon
  */
-public class CustomerFacade extends ClientFacade{
+public class CustomerController extends ClientController{
 	
 	private int customerID;
 
@@ -40,7 +40,7 @@ public class CustomerFacade extends ClientFacade{
 	}
 	
 	
-	public CustomerFacade() {
+	public CustomerController() {
 		super();
 	}
 

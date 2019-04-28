@@ -1,11 +1,14 @@
 package DB;
 
 import java.sql.Connection;
+import Utils.JdbcUtils;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
+
 import Exceptions.ApplicationException;
 import Enums.ErrorType;
 import JavaBeans.Coupon;
@@ -21,53 +24,9 @@ import Utils.DateUtils;
  * @see         JavaBeans.customer
  */
 
-public class CustomerDAO implements ICustomerDAO {
+public class CustomerDAO implements ICustomerDAO {	
 
-private ConnectionPool connectionPool = ConnectionPool.getInstance();
-	
 
-/**
- * compares input mail and pass to customers DB and returns true if found customer with this combination in the DB.
- *
- * @param  email mail used to login
- * @param password password used to login
- * @return true if customer with email\pass combination was found in DB, otherwise false.
- */
-/*should be moved to UsersDAO?
-public boolean isCustomerExists(String email, String password) throws ApplicationException, InterruptedException {
-
-		Connection connection = null;
-
-		try {
-			connection = connectionPool.getConnection();
-			//set sql string to count amount of customers with mail\pass combination
-			String sql = String.format(
-					"SELECT * FROM users WHERE EMAIL = '%s' AND PASSWORD = '%s' AND Type='customer'",
-					email,password);
-			
-			PreparedStatement preparedStatement = connection.prepareStatement(sql); 
-				//execute sql statement
-			ResultSet resultSet = preparedStatement.executeQuery();
-				//return true if customer was found
-			if(!resultSet.next())
-				{
-						throw new ApplicationException(ErrorType.INVALID_EMAIL_OR_PASS,"company does not exist!");
-				}
-				else
-				{
-				return true;
-				}
-		}
-		catch (SQLException e) {
-			//If there was an exception in the "try" block above, it is caught here and notifies a level above.
-			throw new ApplicationException( e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
-					+" Failed to check if customer exists by mail\pass");
-		}
-		finally {
-			connectionPool.restoreConnection(connection);
-		}
-	}
-	*/
 /**
  * find the ID of customer with input mail and pass.
  *
@@ -76,20 +35,21 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
  * @return long containing the customer ID
  * @throws customer does not exist!
  */
-	public long getCustomerID(String firstName, String lastName) throws ApplicationException, InterruptedException {
+	public long getCustomerID(String firstName, String lastName) throws ApplicationException {
 
 		Connection connection = null;
-
+		ResultSet resultSet = null;
+		PreparedStatement preparedStatement = null;
 		try {
-			connection = connectionPool.getConnection();
-			//set sql string to find a customer with the mail\pass combination
-			String sql = String.format(
-					"SELECT ID FROM Customers WHERE firstName = '%s' AND lastName = '%s'",
-					firstName,lastName);
+				connection =JdbcUtils.getConnection();
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+				//set sql string to find a customer with the mail\pass combination
+				String sql = String.format(
+				"SELECT ID FROM Customers WHERE firstName = '%s' AND lastName = '%s'",
+				firstName,lastName);
+				preparedStatement = connection.prepareStatement(sql);
 				//execute sql statement
-				ResultSet resultSet = preparedStatement.executeQuery();
+				resultSet = preparedStatement.executeQuery();
 
 					
 					if (!resultSet.next())
@@ -108,56 +68,11 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
 					+" Failed to find customerID by name");
 		}
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
 	}
 	
-	/**
-	 * compares input mail to customers DB and returns true if found customer with this mail in the DB.
-	 *
-	 * @param  email mail used to login
-	 * @return true if customer with email was found in DB
-	 * @throws InterruptedException 
-	 */
-	/*should be moved to UsersDAO?
-
-	public boolean isCustomerExistsByMail(String email) throws ApplicationException, InterruptedException {
-
-		Connection connection = null;
-
-		try {
-			connection = connectionPool.getConnection();
-			
-			//set sql string to count customers with the mail specified
-			String sql = String.format(
-					"SELECT * FROM users WHERE EMAIL = '%s' AND Type='customer'",
-					email);
-
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
-				//execute sql statement
-				ResultSet resultSet = preparedStatement.executeQuery();
-
-					//return true if any items are returned
-					if(!resultSet.next())
-				{
-						throw new ApplicationException(ErrorType.INVALID_EMAIL_OR_PASS,"company does not exist!");
-				}
-				else
-				{
-				return true;
-				}				
-			
-		}
-		catch (SQLException e) {
-			//If there was an exception in the "try" block above, it is caught here and notifies a level above.
-			throw new ApplicationException( e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
-					+" Failed to check if customer exists by mail");
-		}
-		finally {
-			connectionPool.restoreConnection(connection);
-		}
-	}
-	*/
+	
 
 		/**
 		 *adds a new customer to the DB.
@@ -168,7 +83,7 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
 		 * @see 		JavaBeans.customer
 		 */
 	 
-	 public void addCustomer(Customer customer) throws InterruptedException, ApplicationException  {
+	 public void addCustomer(Customer customer) throws ApplicationException  {
 
 			//Turn on the connections
 			Connection connection=null;
@@ -176,7 +91,7 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
 
 			try {
 				//Establish a connection from the connection manager
-				connection=connectionPool.getConnection();
+				connection =JdbcUtils.getConnection();
 
 				//Creating the SQL query
 				//CompanyID is defined as a primary key and auto incremented
@@ -206,7 +121,7 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
 			} 
 			finally {
 				//Closing the resources
-				connectionPool.restoreConnection(connection);
+				JdbcUtils.closeResources(connection, preparedStatement);
 			}
 				
 	}
@@ -219,13 +134,13 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
 	 * @throws InterruptedException 
 		 * @see 		JavaBeans.Customer
 		 */	
-	public void updateCustomer(Customer Customer) throws ApplicationException, InterruptedException {
+	public void updateCustomer(Customer Customer) throws ApplicationException {
 
 		Connection connection = null;
-
+		PreparedStatement preparedStatement = null;
 		try {
 
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 			//set sql string to include the new properties of the customer to be updated in table (by ID)
 
 			String sql = String.format(
@@ -233,8 +148,8 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
 					Customer.getFirstName(),Customer.getLastName(), Customer.getCustomerId());
 
 			//execute sql statement
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
-				preparedStatement.executeUpdate();
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.executeUpdate();
 			
 		}
 		catch (SQLException e)
@@ -245,7 +160,7 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
 					+" update customer failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement);
 		}
 	}
 
@@ -256,19 +171,19 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
 	 * @param  customer the customer data to be removed from the DB.
 	 * @see 		JavaBeans.Customer
 	 */
-	public void deleteCustomer(int CustomerID) throws ApplicationException, InterruptedException {
+	public void deleteCustomer(long CustomerID) throws ApplicationException {
 
 		Connection connection = null;
-
+		PreparedStatement preparedStatement= null;
 		try {
 
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 			//set sql string to include customer ID to be deleted
 			String sql = String.format("DELETE FROM Customers WHERE CustomerID=%d", CustomerID);
 
 			//execute sql statement
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
-				preparedStatement.executeUpdate();
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.executeUpdate();
 			
 		}
 		catch (SQLException e)
@@ -279,7 +194,7 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
 					+" delete customer failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement);
 		}
 	}
 
@@ -290,36 +205,31 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
 	 * @return ArrayList of all Customers
 	 */
 	
-	public ArrayList<Customer> getAllCustomers() throws ApplicationException, InterruptedException {
+	public Collection<Customer> getAllCustomers() throws ApplicationException {
 
 		Connection connection = null;
-
+		Customer customer = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
 		try {
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 
 			//set sql string to return all data from customers table
 			String sql = "SELECT * FROM Customers";
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 
 				//execute sql statement
-				ResultSet resultSet = preparedStatement.executeQuery();
+				 resultSet = preparedStatement.executeQuery();
 
 					//create arraylist to include customers and be returned
-					ArrayList<Customer> allCustomers = new ArrayList<Customer>();
+					Collection<Customer> allCustomers = new ArrayList<Customer>();
 					//scan each item in the result set
 					while(resultSet.next()) {
 
-						int id = resultSet.getInt("CustomerID");
-						String firstname = resultSet.getString("FIRST_NAME");
-						String lastname = resultSet.getString("LAST_NAME");
-						String email = resultSet.getString("EMAIL");
-						String password = resultSet.getString("PASSWORD");
-			
-						Customer Customer = new Customer(lastname,firstname, email, password, id);
-						//add item from result set to customer arraylist
+						customer = extractCustomerFromResultSet(resultSet);
 
-						allCustomers.add(Customer);
+						allCustomers.add(customer);
 					}
 					//return customer arraylist
 					return allCustomers;
@@ -334,7 +244,7 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
 					+" find customers failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
 	}
 	
@@ -346,34 +256,27 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
 	 * @return		Company object with the specified company data.
 	 */
 	
-	public Customer getOneCustomer(int CustomerID) throws ApplicationException, InterruptedException {
+	public Customer getOneCustomer(long CustomerID) throws ApplicationException {
 
 		Connection connection = null;
 		Customer customer = null;
+		ResultSet resultSet = null;
+		PreparedStatement preparedStatement = null;
 		try {
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 			//set sql string to find customer with selected ID from customers table
 			String sql = String.format("SELECT * FROM Customers WHERE ID=%d", CustomerID);
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql) ;
+			preparedStatement = connection.prepareStatement(sql) ;
 
-				ResultSet resultSet = preparedStatement.executeQuery();
+			resultSet = preparedStatement.executeQuery();
 
-					resultSet.next();
+					if (resultSet.next()) {
 
-					int id = resultSet.getInt("ID");
-					String firstname = resultSet.getString("FIRST_NAME");
-					String lastname = resultSet.getString("LAST_NAME");
-					String email = resultSet.getString("EMAIL");
-					String password = resultSet.getString("PASSWORD");
-		
-					//
-					 customer = new Customer(lastname,firstname, email, password, id);
+						customer = extractCustomerFromResultSet(resultSet);
 
 						return customer;
-
-				
-			
+					}
 		}
 		catch (SQLException e)
 		{
@@ -384,7 +287,7 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
 		} 
 		finally {
 			
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
 	}
 	
@@ -396,20 +299,20 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
 	 * @return 		ArrayList of coupons IDs belonging to this customer	
 	 */
 	
-	public ArrayList<Coupon> getAllCouponsByCustomer(int customerID) throws ApplicationException, InterruptedException {
+	public Collection<Coupon> getAllCouponsByCustomer(int customerID) throws ApplicationException, InterruptedException {
 
 		Connection connection = null;
-
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
 		try {
-			connection = connectionPool.getConnection();
-
+			connection =JdbcUtils.getConnection();
 			String sql = String.format("SELECT * FROM Coupons WHERE coupon_id =(SELECT coupon_id FROM Purchases WHERE customer_id=?)");
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setLong(1,customerID);
 
-				ResultSet resultSet = preparedStatement.executeQuery();
+			resultSet = preparedStatement.executeQuery();
 
-					ArrayList<Coupon> customerCoupons = new ArrayList<Coupon>();
+					Collection<Coupon> customerCoupons = new ArrayList<Coupon>();
 					
 					while(resultSet.next()) {
 						 String description = resultSet.getString("DESCRIPTION");
@@ -440,8 +343,16 @@ public boolean isCustomerExists(String email, String password) throws Applicatio
 		} 
 		
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
 	}
+	
+	
+	private Customer extractCustomerFromResultSet(ResultSet result) throws SQLException {
+		Customer customer = new Customer(result.getString("firstName"),result.getString("lastName"),result.getLong("id"));
+
+		return customer;
+	}
+
 
 }

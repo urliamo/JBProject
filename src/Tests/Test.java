@@ -2,20 +2,21 @@ package Tests;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import Clients.AdminFacade;
-import Clients.CompanyFacade;
-import Clients.CustomerFacade;
+
 import Enums.ClientType;
 import JavaBeans.Company;
 import JavaBeans.Coupon;
 import JavaBeans.Customer;
+import Logic.AdminController;
+import Logic.CompanyController;
+import Logic.CustomerController;
 
 public class Test {
 
 	
 	public static void TestAll() {
 		try {
-		Clients.LoginManager lManager = new Clients.LoginManager();
+		Logic.LoginManager lManager = new Logic.LoginManager();
 		 Thread expiredCouponRemover = new Thread(new Jobs.CoupanExpirationDailyJob());
 			System.out.println("expired coupon thread started");
 
@@ -23,7 +24,7 @@ public class Test {
 		 ArrayList<Company> companies = new ArrayList<Company>();
 		 ArrayList<Customer> customers = new ArrayList<Customer>();
 
-		 Clients.AdminFacade aFacade = (AdminFacade) lManager.login("admin@admin.com", "admin", ClientType.Administrator);
+		 Logic.AdminController aFacade = (AdminController) lManager.login("admin@admin.com", "admin", ClientType.Administrator);
 			System.out.println("admin login successfull");
 
 		 Customer testCustomer = new Customer("McClain", "Jhon", "Jhon@McClain.com", "YippieKiYay", 1);
@@ -55,7 +56,7 @@ public class Test {
 		 aFacade.addCompany(testCompany);
 		 aFacade.addCustomer(testCustomer);
 		 
-		 Clients.CompanyFacade comFacade = (CompanyFacade) lManager.login("test@company.com","pass", ClientType.Company);
+		 Logic.CompanyController comFacade = (CompanyController) lManager.login("test@company.com","pass", ClientType.Company);
 		 Coupon coupon = new Coupon("test Coupon", "/images/Testimage.png", "testCoupon", 1, 2,LocalDate.of(2018,9,12), LocalDate.of(2020,1,1), testCompany.getId(), 1, 10.5);
 		 
 		 comFacade.addCoupon(coupon);
@@ -66,7 +67,7 @@ public class Test {
 		 coupon.setAmount(5);
 		 comFacade.updateCoupon(coupon);
 		 
-		 Clients.CustomerFacade cusFacade = (CustomerFacade) lManager.login("adress@change.com", "YippieKiYay", ClientType.Customer);
+		 Logic.CustomerController cusFacade = (CustomerController) lManager.login("adress@change.com", "YippieKiYay", ClientType.Customer);
 		 cusFacade.purchaseCoupon(coupon);
 		 companyCoupons = cusFacade.getCustomerCoupons();
 		 companyCoupons = cusFacade.getCustomerCoupons(20.5);

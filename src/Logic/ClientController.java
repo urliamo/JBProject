@@ -1,4 +1,4 @@
-package Clients;
+package Logic;
 
 /**
  * Parent class from which other facades inherit.
@@ -9,7 +9,7 @@ package Clients;
  * @see 		DB.CustomerDAO
  * @see			DB.CouponsDAO
  */
-public abstract class ClientFacade {
+public abstract class ClientController {
 	
 	protected  DB.CompaniesDAO companiesDBDAO= new DB.CompaniesDAO();
 	protected  DB.CustomerDAO customerDBDAO= new DB.CustomerDAO();

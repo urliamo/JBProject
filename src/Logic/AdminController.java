@@ -1,4 +1,4 @@
-package Clients;
+package Logic;
 
 import java.util.ArrayList;
 
@@ -15,7 +15,7 @@ import JavaBeans.Customer;
  * @see 		JavaBeans.Customer
  */
 
-public class AdminFacade extends ClientFacade{
+public class AdminController extends ClientController{
 
 	
 	private String password = "admin";

@@ -1,4 +1,4 @@
-package Clients;
+package Logic;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -14,9 +14,9 @@ import JavaBeans.Coupon;
  * @param  companyID int containing the unique ID of the current company using this object instance.
  * @see         JavaBeans.Company
  * @see 		JavaBeans.Coupon
- * @see			Clients.LoginManager
+ * @see			Logic.LoginManager
  */
-public class CompanyFacade extends ClientFacade {
+public class CompanyController extends ClientController {
 
 	private int companyID;
 	
@@ -52,7 +52,7 @@ public class CompanyFacade extends ClientFacade {
 		this.companyID = l;
 	}
 
-	public CompanyFacade() {
+	public CompanyController() {
 		super();
 	}
 

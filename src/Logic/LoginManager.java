@@ -1,11 +1,11 @@
-package Clients;
+package Logic;
 
 import Enums.ClientType;
 
 /**
  * class responsible to return a client facade of type relevant to use logging in.
  *
- * @see         Clients.ClientFacade
+ * @see         Logic.ClientController
  */
 public class LoginManager {
 
@@ -28,10 +28,10 @@ public class LoginManager {
 	 * @throws		wrong mail/password!
 	 */
 	
-	public ClientFacade login(String email, String password, ClientType clientType) {
+	public ClientController login(String email, String password, ClientType clientType) {
 		switch (clientType) {
 		case Administrator:
-			AdminFacade administratorFacade = new AdminFacade();
+			AdminController administratorFacade = new AdminController();
 			try {
 			administratorFacade.login(email, password);
 			}
@@ -41,7 +41,7 @@ public class LoginManager {
 			}
 			return administratorFacade;
 		case Customer:
-			CustomerFacade customerFacade = new CustomerFacade();
+			CustomerController customerFacade = new CustomerController();
 			try {
 				customerFacade.login(email, password);
 			}
@@ -51,7 +51,7 @@ public class LoginManager {
 			}
 			return customerFacade;
 		case Company:
-			CompanyFacade companyFacade = new CompanyFacade();
+			CompanyController companyFacade = new CompanyController();
 			try {
 				companyFacade.login(email, password);
 			}

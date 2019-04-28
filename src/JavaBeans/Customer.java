@@ -3,7 +3,7 @@ package JavaBeans;
 public class Customer {
 		private String lastName;
 		private String firstName;
-	    private int customerId;
+	    private long customerId;
 	    
 	    public String getLastName() {
 			return lastName;
@@ -18,15 +18,15 @@ public class Customer {
 			this.firstName = first_name;
 		}
 		
-		public int getCustomerId() {
+		public long getCustomerId() {
 			return customerId;
 		}
-		public void setCustomerId(int id) {
+		public void setCustomerId(long id) {
 			this.customerId = id;
 		}
 		
 		
-		public Customer(String lastName, String firstName, String email, String password, int id) {
+		public Customer(String lastName, String firstName, long id) {
 			super();
 			this.setLastName(lastName);
 			this.setFirstName(firstName);
