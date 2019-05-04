@@ -6,8 +6,7 @@ public class Company {
 
     private String name;
     private String email;
-    private String password;
-    private int id;
+    private long company_id;
     private ArrayList<Coupon> coupons;
     
     
@@ -28,28 +27,24 @@ public class Company {
     	}
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
 
-    public void setId(int id) {
-        this.id = id;
+
+    public void setCompanyID(long id) {
+        this.company_id = id;
     }
 
     public String getName() {
         return this.name;
     }
 
-    public String getPassword() {
-        return this.password;
-    }
+
 
     public String getEmail() {
         return this.email;
     }
 
-    public int getId() {
-        return this.id;
+    public long getCompanyID() {
+        return this.company_id;
     }
     
     public ArrayList<Coupon> getCoupons() {
@@ -60,11 +55,10 @@ public class Company {
 		this.coupons = coupons;
 	}
     
-    public Company(String name, String email, String password, int id, ArrayList<Coupon> coupons) {
+    public Company(String name, String email, String password, long id, ArrayList<Coupon> coupons) {
 		this.setName(name);
 		this.setEmail(email);
-		this.setPassword(password);
-		this.setId(id);
+		this.setCompanyID(company_id);
 		this.setCoupons(coupons);
 	}
 

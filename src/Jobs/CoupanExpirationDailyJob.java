@@ -16,7 +16,7 @@ import JavaBeans.Coupon;
 public class CoupanExpirationDailyJob implements Runnable {
 	
 	private boolean quit = false;
-	private  DB.CouponsDBDAO couponsDBDAO = new DB.CouponsDBDAO();
+	private  DB.CouponsDAO couponsDBDAO = new DB.CouponsDAO();
 	private LocalDate date = LocalDate.now();
 	
 	public void setQuit(boolean quit) {

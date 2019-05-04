@@ -8,11 +8,11 @@ public class Coupon {
     private String description;
     private String image;
     private String title;
-    private int id;
+    private long coupon_id;
     private int amount;
     private LocalDate start_date;
     private LocalDate end_date;
-    private int company_id;
+    private long company_id;
     private int category_id;
     private double price;
     
@@ -44,11 +44,11 @@ public class Coupon {
 	public void setTitle(String title) {
 		this.title = title;
 	}
-	public int getId() {
-		return id;
+	public long getId() {
+		return coupon_id;
 	}
-	public void setId(int id) {
-		this.id = id;
+	public void setId(long id) {
+		this.coupon_id = id;
 	}
 	public int getAmount() {
 		return amount;
@@ -69,10 +69,10 @@ public class Coupon {
 	public void setEnd_date(LocalDate end_date) {
 		this.end_date = end_date;
 	}
-	public int getCompany_id() {
+	public long getCompany_id() {
 		return company_id;
 	}
-	public void setCompany_id(int company_id) {
+	public void setCompany_id(long company_id) {
 		this.company_id = company_id;
 	}
 	public int getCategory_id() {
@@ -84,13 +84,13 @@ public class Coupon {
     
 	//-------------Constructors-----------------------------------------------//
 	
-	public Coupon(String description, String image, String title, int id, int amount, LocalDate start_date, LocalDate end_date,
-			int company_id, int category_id, double price) {
+	public Coupon(String description, String image, String title, long coupon_id, int amount, LocalDate start_date, LocalDate end_date,
+			long company_id, int category_id, double price) {
 		super();
 		this.setDescription(description);
 		this.setImage(image);
 		this.setTitle(title);
-		this.setId(id);
+		this.setId(coupon_id);
 		this.setAmount(amount);
 		this.setStart_date(start_date);
 		this.setEnd_date(end_date);
