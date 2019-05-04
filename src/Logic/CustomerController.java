@@ -25,19 +25,7 @@ public class CustomerController extends ClientController{
 	 * @see 		DB.customerDBDAO
 	 * @throws 		wrong mail/password!
 	 */
-	public void login(String email, String password){
-		try {
-			if (!customerDBDAO.isCustomerExists(email, password)) {
-				throw new Exception("wrong mail/password");
-			}
-			this.setCustomerID(customerDBDAO.getCustomerID(email, password));
-			}
-			catch(Exception Ex){
-				 System.out.println(Ex.getMessage());
 
-			}
-	
-	}
 	
 	
 	public CustomerController() {

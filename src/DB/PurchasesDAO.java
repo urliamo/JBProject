@@ -64,12 +64,7 @@ public class PurchasesDAO {
 			JdbcUtils.closeResources(connection, preparedStatement);
 		}
 	}
-	/**
-	 * removes a coupon purchase from the DB.
-	 * 
-	 * @param  couponID the ID of the coupon to be removed from the DB
-	 * @param  customerID the ID of the customer the coupon should be removed from
-	 */
+
 	
 	public Collection<Purchase> getAllPurchasesByCoupon(long couponID) throws ApplicationException {
 		Connection connection = null;
@@ -99,6 +94,8 @@ public class PurchasesDAO {
 			JdbcUtils.closeResources(connection, preparedStatement);
 		}
 	}
+	
+	
 	public Collection<Purchase> getAllPurchasesbyCustomer(long customerID) throws ApplicationException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
@@ -127,7 +124,9 @@ public class PurchasesDAO {
 			JdbcUtils.closeResources(connection, preparedStatement);
 		}
 	}
-	public void deleteCouponPurchase(int couponID, int customerID) throws ApplicationException {
+	
+	
+	public void deleteCouponPurchase(long couponID, long customerID) throws ApplicationException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		try {

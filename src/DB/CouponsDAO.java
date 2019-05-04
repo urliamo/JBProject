@@ -6,12 +6,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Locale.Category;
 
+import Enums.Categories;
 import Enums.ErrorType;
 import Exceptions.ApplicationException;
 import JavaBeans.Coupon;
 import Utils.DateUtils;
+import Utils.JdbcUtils;
 
 
 /**
@@ -21,27 +24,27 @@ import Utils.DateUtils;
  * @see 		JavaBeans.Coupon
  */public class CouponsDAO implements ICouponsDAO {
 	
-	private ConnectionPool connectionPool = ConnectionPool.getInstance();
 	
 	
 	/**
 	 *  returns true if coupon exists with this ID
 	 *
 	 * @param  id the ID of the coupon to be searched
-	 * @return		true if company exists in DB
+	 * @return		true if coupon exists in DB
 	 */
 	
-	public boolean isCouponExists(long id) throws ApplicationException, InterruptedException {
+	public boolean isCouponExists(long id) throws ApplicationException {
 
 		Connection connection = null;
+		PreparedStatement preparedStatement = null;
 
 		try {
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 
 			String sql = String.format(
 					"SELECT * AS Count FROM Coupons WHERE couponID = ?'");
 	
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setLong(1,id);
 
 				ResultSet resultSet = preparedStatement.executeQuery();
@@ -64,7 +67,7 @@ import Utils.DateUtils;
 					+" check coupon exists failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement);
 		}
 	}
 	
@@ -78,13 +81,14 @@ import Utils.DateUtils;
 	 * @see			JavaBeans.Coupon
 	 */
 	
-	public long addCoupon(Coupon Coupon) throws ApplicationException, InterruptedException {
+	public long addCoupon(Coupon Coupon) throws ApplicationException {
 
 		Connection connection = null;
+		PreparedStatement preparedStatement = null;
 
 		try {
 
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 			
 			if (Coupon.getStart_date().isAfter(Coupon.getEnd_date()))
 			{
@@ -99,8 +103,7 @@ import Utils.DateUtils;
 			String sql = String.format("INSERT INTO Coupons(DESCRIPTION, IMAGE, TITLE, AMOUNT, START_DATE, END_DATE, COMPANY_ID, CATEGORY_ID, PRICE) " + 
 					"VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-			PreparedStatement preparedStatement = 
-					connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+			preparedStatement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
 			preparedStatement.setString(1,Coupon.getDescription());
 			preparedStatement.setString(2,Coupon.getImage());
 			preparedStatement.setString(3, Coupon.getTitle());
@@ -108,7 +111,7 @@ import Utils.DateUtils;
 			preparedStatement.setDate(5,java.sql.Date.valueOf(Coupon.getStart_date()));
 			preparedStatement.setDate(6,java.sql.Date.valueOf(Coupon.getEnd_date()));
 			preparedStatement.setLong(7, Coupon.getCompany_id());
-			preparedStatement.setInt(8,Coupon.getCategory_id());
+			preparedStatement.setString(8,Coupon.getCategory().toString());
 			preparedStatement.setDouble(9, Coupon.getPrice());
 			
 			
@@ -134,7 +137,7 @@ import Utils.DateUtils;
 					+" add coupon failed");
 		} 
 			finally {
-			connectionPool.restoreConnection(connection);
+				JdbcUtils.closeResources(connection, preparedStatement);
 		}
 	}
 
@@ -145,9 +148,10 @@ import Utils.DateUtils;
 	 * @param  coupon the  coupon to be added updated in the DB
 	 * @see			JavaBeans.Coupon
 	 */
-	public void updateCoupon(Coupon Coupon) throws ApplicationException, InterruptedException {
+	public void updateCoupon(Coupon Coupon) throws ApplicationException {
 
 		Connection connection = null;
+		PreparedStatement preparedStatement = null;
 
 		try {
 
@@ -162,13 +166,13 @@ import Utils.DateUtils;
 
 			}
 			
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 
 			String sql = String.format(
 					"UPDATE Coupons SET DESCRIPTION=?, IMAGE=?, TITLE=?, AMOUNT=?, START_DATE=?, END_DATE=?, CATEGORY_ID=?, PRICE=? WHERE couponID=?");
 			
 			
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 			
 			preparedStatement.setString(1,Coupon.getDescription());
 			preparedStatement.setString(2,Coupon.getImage());
@@ -176,7 +180,7 @@ import Utils.DateUtils;
 			preparedStatement.setInt(4,Coupon.getAmount());
 			preparedStatement.setDate(5,java.sql.Date.valueOf(Coupon.getStart_date()));
 			preparedStatement.setDate(6,java.sql.Date.valueOf(Coupon.getEnd_date()));
-			preparedStatement.setInt(7,Coupon.getCategory_id());
+			preparedStatement.setString(7,Coupon.getCategory().toString());
 			preparedStatement.setDouble(8, Coupon.getPrice());
 			preparedStatement.setLong(9, Coupon.getId());
 				preparedStatement.executeUpdate();
@@ -190,7 +194,7 @@ import Utils.DateUtils;
 					+" update coupon failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement);
 		}
 	}
 
@@ -200,17 +204,18 @@ import Utils.DateUtils;
 	 * @param  couponID the Id of the coupon to be removed from the DB
 	 * @see			JavaBeans.Coupon
 	 */
-	public void deleteCoupon(long CouponID) throws ApplicationException, InterruptedException {
+	public void deleteCoupon(long CouponID) throws ApplicationException {
 
 		Connection connection = null;
-
+		PreparedStatement preparedStatement = null;
+		
 		try {
 
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 
 			String sql = String.format("DELETE FROM Coupons WHERE couponID=?");
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setLong(1, CouponID);
 
 				preparedStatement.executeUpdate();
@@ -223,7 +228,7 @@ import Utils.DateUtils;
 					+" delete coupon failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement);
 		}
 	}
 
@@ -237,33 +242,22 @@ import Utils.DateUtils;
 	public ArrayList<Coupon> getAllCoupons() throws ApplicationException, InterruptedException {
 
 		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
 
 		try {
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 
 			String sql = "SELECT * FROM Coupons";
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 
-				ResultSet resultSet = preparedStatement.executeQuery();
+			resultSet = preparedStatement.executeQuery();
 
 					ArrayList<Coupon> allCoupons = new ArrayList<Coupon>();
 					
 					while(resultSet.next()) {
-						 String description = resultSet.getString("DESCRIPTION");
-					     String image = resultSet.getString("IMAGE");
-					     String title = resultSet.getString("TITLE");
-					     long id = resultSet.getLong("couponID");
-					     int amount = resultSet.getInt("AMOUNT");
-					     LocalDate strat_date = resultSet.getDate("START_DATE").toLocalDate();
-					     LocalDate end_date = resultSet.getDate("END_DATE").toLocalDate();
-					     long company_id = resultSet.getLong("COMPANYID");
-					     int category_id = resultSet.getInt("CATEGORYID");
-					     double price = resultSet.getDouble("PRICE");
-						
-	
-						Coupon Coupon = new Coupon(description, image, title, id,amount,strat_date,end_date,company_id, category_id,price);
-						
+						Coupon Coupon = extractCouponFromResultSet(resultSet);	
 						allCoupons.add(Coupon);
 					}
 					
@@ -278,7 +272,7 @@ import Utils.DateUtils;
 					+" return all coupons failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
 	}
 	/**
@@ -287,36 +281,26 @@ import Utils.DateUtils;
 	 * @see			JavaBeans.Coupon
 	 * @return ArrayList of all expired coupons as coupon objects.
 	 */
-	public ArrayList<Coupon> getExpiredCoupons() throws ApplicationException, InterruptedException {
+	public ArrayList<Coupon> getExpiredCoupons() throws ApplicationException {
 
 		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
 
 		try {
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 
 			String sql = "SELECT * FROM Coupons where end_date <"+java.sql.Date.valueOf(LocalDate.now());
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 
-				ResultSet resultSet = preparedStatement.executeQuery();
+			resultSet = preparedStatement.executeQuery();
 
-					ArrayList<Coupon> allCoupons = new ArrayList<Coupon>();
+			ArrayList<Coupon> allCoupons = new ArrayList<Coupon>();
 					
 					while(resultSet.next()) {
-						 String description = resultSet.getString("DESCRIPTION");
-					     String image = resultSet.getString("IMAGE");
-					     String title = resultSet.getString("TITLE");
-					     long id = resultSet.getInt("couponID");
-					     int amount = resultSet.getInt("AMOUNT");
-					     LocalDate strat_date = resultSet.getDate("START_DATE").toLocalDate();
-					     LocalDate end_date = resultSet.getDate("END_DATE").toLocalDate();
-					     long company_id = resultSet.getInt("COMPANYID");
-					     int category_id = resultSet.getInt("CATEGORYID");
-					     double price = resultSet.getDouble("PRICE");
 						
-	
-						Coupon Coupon = new Coupon(description, image, title, id,amount,strat_date,end_date,company_id, category_id,price);
-						
+						Coupon Coupon = extractCouponFromResultSet(resultSet);	
 						allCoupons.add(Coupon);
 					}
 					
@@ -331,7 +315,7 @@ import Utils.DateUtils;
 					+" return expired coupons failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
 	}
 	
@@ -342,37 +326,28 @@ import Utils.DateUtils;
 	 * @return 		coupon object with the data of the coupon with specified ID.
 	 */
 	
-	public Coupon getOneCoupon(long CouponID) throws ApplicationException, InterruptedException {
+	public Coupon getOneCoupon(long CouponID) throws ApplicationException {
 
 		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
 
 		try {
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 
 			String sql = String.format("SELECT * FROM Coupons WHERE ID=?");
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setLong(1,CouponID);
 
-				ResultSet resultSet = preparedStatement.executeQuery();
+				resultSet = preparedStatement.executeQuery();
 				if (!resultSet.next())
 				{
 					throw new ApplicationException(ErrorType.INVALID_ID,"coupon does not exist!");
 				}
 
-					String description = resultSet.getString("DESCRIPTION");
-				     String image = resultSet.getString("IMAGE");
-				     String title = resultSet.getString("TITLE");
-				     int id = resultSet.getInt("ID");
-				     int amount = resultSet.getInt("AMOUNT");
-				     LocalDate strat_date = resultSet.getDate("START_DATE").toLocalDate();
-				     LocalDate end_date = resultSet.getDate("END_DATE").toLocalDate();
-				     int company_id = resultSet.getInt("COMPANY_ID");
-				     int category_id = resultSet.getInt("CATEGORY_ID");
-				     double price = resultSet.getDouble("PRICE");
-
-					Coupon Coupon = new Coupon(description, image, title, id,amount,strat_date,end_date,company_id, category_id,price);
 					
+					Coupon Coupon = extractCouponFromResultSet(resultSet);
 					return Coupon;
 			
 		}
@@ -385,7 +360,7 @@ import Utils.DateUtils;
 		} 	
 			
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
 	}
 
@@ -397,27 +372,28 @@ import Utils.DateUtils;
 	 * @return 		ID of the category of the coupon with specified ID.
 	 */
 	
-	public Category getCouponCategory(int categoryID) throws Exception {
+	public Category getCouponCategory(int categoryID) throws ApplicationException {
 
 		Connection connection = null;
-
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
 		try {
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 
 			String sql = String.format("SELECT * FROM categories WHERE ID=?");
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setInt(1,categoryID);
 
-				ResultSet resultSet = preparedStatement.executeQuery();
+			resultSet = preparedStatement.executeQuery();
 
-					resultSet.next();
+			resultSet.next();
 
-					String name = resultSet.getString("NAME");
+			String name = resultSet.getString("NAME");
 				    
-					Category category = Category.valueOf(name);
+			Category category = Category.valueOf(name);
 					
-					return category;
+			return category;
 			
 		}
 		catch (SQLException e)
@@ -428,10 +404,97 @@ import Utils.DateUtils;
 					+" return coupon category failed");
 		} 	
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
+		}
+	}
+	public Collection<Coupon> getAllCouponsByCustomer(long customerID) throws ApplicationException, InterruptedException {
+
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+		try {
+			connection =JdbcUtils.getConnection();
+			String sql = String.format("SELECT * FROM Coupons WHERE coupon_id =(SELECT coupon_id FROM Purchases WHERE customer_id=?)");
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setLong(1,customerID);
+
+			resultSet = preparedStatement.executeQuery();
+
+					Collection<Coupon> customerCoupons = new ArrayList<Coupon>();
+					
+					while(resultSet.next()) {
+						
+						Coupon coupon = extractCouponFromResultSet(resultSet);
+
+						customerCoupons.add(coupon);
+					}
+					
+					return customerCoupons;
+				}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			//If there was an exception in the "try" block above, it is caught here and notifies a level above.
+			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
+					+" find customer coupons failed");
+		} 
+		
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
 	}
 	
+	/**
+	 * returns all coupons belonging to company with specified ID.
+	 * 
+	 * @param  companyID the ID of the company whose coupons are to be returned
+	 * @return ArrayList of all coupon objects belonging to company with specified ID
+	 */
+	
+	
+	public Collection<Coupon> getCompanyCoupons(long companyID) throws ApplicationException, InterruptedException {
+
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+		try {
+			connection =JdbcUtils.getConnection();
+			String sql = String.format("SELECT * FROM Coupons WHERE company_id=?");
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setLong(1,companyID);
+
+			resultSet = preparedStatement.executeQuery();
+
+					Collection<Coupon> customerCoupons = new ArrayList<Coupon>();
+					
+					while(resultSet.next()) {
+						
+						Coupon coupon = extractCouponFromResultSet(resultSet);
+
+						customerCoupons.add(coupon);
+					}
+					
+					return customerCoupons;
+				}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			//If there was an exception in the "try" block above, it is caught here and notifies a level above.
+			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
+					+" find customer coupons failed");
+		} 
+		
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
+		}
+	}
+	
+private Coupon extractCouponFromResultSet(ResultSet result) throws SQLException  {
+		
+		Coupon coupon = new Coupon(result.getString("description"),result.getString("image"), result.getString("title"),result.getLong("coup_id"), result.getInt("amount"), result.getDate("start_date").toLocalDate(), result.getDate("end_date").toLocalDate(), result.getLong("comp_id"), Categories.valueOf(result.getString("category")), result.getDouble("price"));
+	
+		return coupon;
+	}
 	
 	
 

@@ -3,6 +3,8 @@ package JavaBeans;
 import java.time.LocalDate;
 //import java.util.Date;
 
+import Enums.Categories;
+
 public class Coupon {
 
     private String description;
@@ -13,7 +15,7 @@ public class Coupon {
     private LocalDate start_date;
     private LocalDate end_date;
     private long company_id;
-    private int category_id;
+    private Categories category;
     private double price;
     
     
@@ -75,17 +77,17 @@ public class Coupon {
 	public void setCompany_id(long company_id) {
 		this.company_id = company_id;
 	}
-	public int getCategory_id() {
-		return category_id;
+	public Categories getCategory() {
+		return category;
 	}
-	public void setCategory_id(int category_id) {
-		this.category_id = category_id;
+	public void setCategory(Categories category) {
+		this.category = category;
 	}
     
 	//-------------Constructors-----------------------------------------------//
 	
 	public Coupon(String description, String image, String title, long coupon_id, int amount, LocalDate start_date, LocalDate end_date,
-			long company_id, int category_id, double price) {
+			long company_id, Categories category, double price) {
 		super();
 		this.setDescription(description);
 		this.setImage(image);
@@ -95,7 +97,7 @@ public class Coupon {
 		this.setStart_date(start_date);
 		this.setEnd_date(end_date);
 		this.setCompany_id(company_id);
-		this.setCategory_id(category_id);
+		this.setCategory(category);
 		this.setPrice(price);
 	}
     

@@ -4,14 +4,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.ArrayList;
-
 import Enums.ErrorType;
 import Exceptions.ApplicationException;
 import JavaBeans.Company;
-import JavaBeans.Coupon;
 import Utils.DateUtils;
+import Utils.JdbcUtils;
 
 
 /**
@@ -23,7 +21,6 @@ import Utils.DateUtils;
  */
 public class CompaniesDAO implements ICompaniesDAO {
 	
-	private ConnectionPool connectionPool = ConnectionPool.getInstance();
 	/**
 	 * compares input mail and pass to companies DB and returns true if company exists with this combination
 	 *
@@ -31,22 +28,25 @@ public class CompaniesDAO implements ICompaniesDAO {
 	 * @param password password used to search
 	 * @return		true if company exists in DB
 	 */
+	
 	public boolean isCompanyExists(String email, String password) throws Exception {
 
 		Connection connection = null;
-
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+		
 		try {
 			//create SQL statement
 
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 
 			String sql = String.format(
 					"SELECT * FROM COMPANIES WHERE EMAIL = ? AND PASSWORD = ?");
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1,email);
 			preparedStatement.setString(2,password);
-				ResultSet resultSet = preparedStatement.executeQuery();
+			resultSet = preparedStatement.executeQuery();
 
 				if(!resultSet.next())
 				{
@@ -67,7 +67,7 @@ public class CompaniesDAO implements ICompaniesDAO {
 					+" check company exists failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
 	}
 	/**
@@ -79,19 +79,21 @@ public class CompaniesDAO implements ICompaniesDAO {
 	 * @return	int containing the found companyID
 	 * @throws InterruptedException 
 	 */
-	public long getCompanyID(String email, String password) throws ApplicationException, InterruptedException {
+	public long getCompanyID(String email, String password) throws ApplicationException {
 
 		Connection connection = null;
-
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+		
 		try {
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 
 			String sql = String.format("SELECT ID FROM COMPANIES WHERE EMAIL = ? AND PASSWORD = ?");
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
-				preparedStatement.setString(1,email);
-				preparedStatement.setString(2,password);
-				ResultSet resultSet = preparedStatement.executeQuery();
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1,email);
+			preparedStatement.setString(2,password);
+			resultSet = preparedStatement.executeQuery();
 
 					
 					if(!resultSet.next())
@@ -113,7 +115,7 @@ public class CompaniesDAO implements ICompaniesDAO {
 					+" get company failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
 	}
 	
@@ -125,18 +127,20 @@ public class CompaniesDAO implements ICompaniesDAO {
 	 * @param name name of company to be searched 
 	 * @return		true if company exists in DB
 	 */
-	public boolean isCompanyExistsByMailOrName(String email, String name) throws ApplicationException, InterruptedException {
+	public boolean isCompanyExistsByMailOrName(String email, String name) throws ApplicationException {
 
 		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+
 
 		try {
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 
 			String sql = String.format(
 					"SELECT * FROM COMPANIES WHERE EMAIL = ? OR NAME = ?");
 			
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1,email);
 			preparedStatement.setString(2,name);
 				ResultSet resultSet = preparedStatement.executeQuery();
@@ -160,7 +164,7 @@ public class CompaniesDAO implements ICompaniesDAO {
 					+" get company failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement);
 		}
 	}
 
@@ -174,25 +178,25 @@ public class CompaniesDAO implements ICompaniesDAO {
 	 * @see 		JavaBeans.Company
 	 */
 	
-	public long addCompany(Company company) throws  ApplicationException, InterruptedException {
+	public long addCompany(Company company) throws  ApplicationException {
 
 		Connection connection = null;
-
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
 		try {
-			//create SQL statement
 
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 
 			String sql = String.format("INSERT INTO COMPANIES(COMPANYID, EMAIL, NAME) " + 
 					"VALUES(?, ?, ?)");
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setLong(1,company.getCompanyID());
 			preparedStatement.setString(2,company.getEmail());
 			preparedStatement.setString(3,  company.getName());
-				preparedStatement.executeUpdate();
-
-				ResultSet resultSet = preparedStatement.getGeneratedKeys();
+			preparedStatement.executeUpdate();
+			resultSet = preparedStatement.getGeneratedKeys();
+			
 				if (resultSet.next()) {
 					long id = resultSet.getLong(1);
 					return id;
@@ -211,7 +215,7 @@ public class CompaniesDAO implements ICompaniesDAO {
 					+" add company failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
 	}
 	/**
@@ -220,21 +224,21 @@ public class CompaniesDAO implements ICompaniesDAO {
 	 * @param  company the company to be updated
 	 * @see 		JavaBeans.Company
 	 */
-	public void updateCompany(Company company) throws  ApplicationException, InterruptedException {
+	public void updateCompany(Company company) throws  ApplicationException {
 
 		Connection connection = null;
+		PreparedStatement preparedStatement = null;
 
 		try {
-			//create SQL statement
 
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 
 			String sql = String.format("UPDATE COMPANIES SET EMAIL = ? where companyID= ?");
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1,company.getEmail());
 			preparedStatement.setLong(2,company.getCompanyID());
-				preparedStatement.executeUpdate();
+			preparedStatement.executeUpdate();
 			
 		}
 		catch (SQLException e)
@@ -245,7 +249,7 @@ public class CompaniesDAO implements ICompaniesDAO {
 					+" update company failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement);
 		}
 	}
 	
@@ -254,17 +258,17 @@ public class CompaniesDAO implements ICompaniesDAO {
 	 * @param  companyID the ID of the company to be removed
 	 */
 
-	public void deleteCompany(long companyID) throws ApplicationException, InterruptedException  {
+	public void deleteCompany(long companyID) throws ApplicationException  {
 
 		Connection connection = null;
-		try {
-			//create SQL statement
+		PreparedStatement preparedStatement = null;
 
-			connection = connectionPool.getConnection();
+		try {
+			connection =JdbcUtils.getConnection();
 
 			String sql = String.format("DELETE FROM COMPANIES WHERE ID=?");
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setLong(1,companyID);
 
 			preparedStatement.executeUpdate();
@@ -273,12 +277,11 @@ public class CompaniesDAO implements ICompaniesDAO {
 		catch (SQLException e)
 		{
 			e.printStackTrace();
-			//If there was an exception in the "try" block above, it is caught here and notifies a level above.
 			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
 					+" delete company failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement);
 		}
 	}
 
@@ -292,147 +295,91 @@ public class CompaniesDAO implements ICompaniesDAO {
 	public ArrayList<Company> getAllCompanies() throws Exception {
 
 		Connection connection = null;
-
+		ResultSet resultSet = null;
+		PreparedStatement preparedStatement = null;
+		
 		try {
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 
 			String sql = "SELECT * FROM COMPANIES";
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement = connection.prepareStatement(sql);
 
-				ResultSet resultSet = preparedStatement.executeQuery();
+			resultSet = preparedStatement.executeQuery();
 
-					ArrayList<Company> allCompanies = new ArrayList<Company>();
+			ArrayList<Company> allCompanies = new ArrayList<Company>();
 					
-					while(resultSet.next()) {
-
-						long id = resultSet.getLong("companyID");
-						String name = resultSet.getString("NAME");
-						String email = resultSet.getString("EMAIL");
-						String password = resultSet.getString("PASSWORD");
-						ArrayList<Coupon> coupons = getCouponsByCompanyID(id);
-	
-						Company company = new Company(name, email, password, id,coupons);
-						
+			while(resultSet.next()) {
+						Company company = extractCompanyFromResultSet(resultSet);
 						allCompanies.add(company);
 					}
 					
-					return allCompanies;
+			return allCompanies;
 				
 			
 		}
 		catch (SQLException e)
 		{
 			e.printStackTrace();
-			//If there was an exception in the "try" block above, it is caught here and notifies a level above.
 			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
 					+" find all companies failed");
 		} 
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
 	}
-	/**
-	 * returns all coupons belonging to company with specified ID.
-	 * 
-	 * @param  companyID the ID of the company whose coupons are to be returned
-	 * @return ArrayList of all coupon objects belonging to company with specified ID
-	 */
 	
-	public ArrayList<Coupon> getCouponsByCompanyID(long companyID) throws Exception {
-		Connection connection = null;
-
-		try {
-			connection = connectionPool.getConnection();
-
-			String sql = String.format("SELECT * FROM Coupons WHERE COMPANY_ID=?");
-
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
-			preparedStatement.setLong(1,companyID);
-			ResultSet resultSet = preparedStatement.executeQuery();
-
-			ArrayList<Coupon> allCoupons = new ArrayList<Coupon>();
-					
-			while(resultSet.next()) {
-						 String description = resultSet.getString("DESCRIPTION");
-					     String image = resultSet.getString("IMAGE");
-					     String title = resultSet.getString("TITLE");
-					     long coupon_id = resultSet.getLong("couponID");
-					     int amount = resultSet.getInt("AMOUNT");
-					     LocalDate start_date = resultSet.getDate("START_DATE").toLocalDate();
-					     LocalDate end_date = resultSet.getDate("END_DATE").toLocalDate();
-					     long company_id = resultSet.getLong("COMPANYID");
-					     int category_id = resultSet.getInt("CATEGORYID");
-					     double price = resultSet.getDouble("PRICE");
-						
 	
-						Coupon Coupon = new Coupon(description, image, title, coupon_id,amount,start_date,end_date,company_id, category_id,price);
-						
-						allCoupons.add(Coupon);
-					}
-					
-					return allCoupons;
-			
-		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
-			//If there was an exception in the "try" block above, it is caught here and notifies a level above.
-			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
-					+" find all company coupons failed");
-		} 
-		finally {
-			connectionPool.restoreConnection(connection);
-		}
-	}
 	/**
 	 *	returns a company of the specified ID
 	 *
-	 * @param		companyID int containing the ID of the company to be returned
+	 * @param		companyID long containing the ID of the company to be returned
 	 * @return		Company object with the company data of the specified ID.
 	 */
-	public Company getCompanyByID(long companyID) throws Exception {
+	public Company getCompanyByID(long companyID) throws ApplicationException {
 
 		Connection connection = null;
-
+		ResultSet resultSet = null;
+		PreparedStatement preparedStatement = null;
+		
 		try {
-			connection = connectionPool.getConnection();
+			connection =JdbcUtils.getConnection();
 
 			String sql = String.format("SELECT * FROM COMPANIES WHERE ID=?");
 
-			PreparedStatement preparedStatement = connection.prepareStatement(sql);
-				preparedStatement.setLong(1,companyID);
-
-				ResultSet resultSet = preparedStatement.executeQuery();
-				if(!resultSet.next())
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setLong(1,companyID);
+			resultSet = preparedStatement.executeQuery();
+			
+				 if(!resultSet.next())
 				{
 						throw new ApplicationException(ErrorType.INVALID_EMAIL_OR_PASS,"company does not exist!");
 				}
 				else
 				{
 
-					String name = resultSet.getString("NAME");
-					String email = resultSet.getString("EMAIL");
-					String password = resultSet.getString("PASSWORD");
-					ArrayList<Coupon> coupons = getCouponsByCompanyID(companyID);
-
-					Company company = new Company(name, email, password,companyID, coupons);
-
-					return company;
-				
-		}	
+					Company company = extractCompanyFromResultSet(resultSet);
+					return company;			
+				}	
 		}
 		catch (SQLException e)
 		{
 			e.printStackTrace();
-			//If there was an exception in the "try" block above, it is caught here and notifies a level above.
 			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
 					+" find company failed");
 		} 
 		
 		finally {
-			connectionPool.restoreConnection(connection);
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
 		}
 	}
+	
+	
+	private Company extractCompanyFromResultSet(ResultSet result) throws SQLException {
+		Company company = new Company(result.getString("contact_email"), result.getString("comp_name"),result.getLong("comp_id") );
 
+
+		return company;
+
+	}
 }

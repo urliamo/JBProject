@@ -16,7 +16,7 @@ import Exceptions.ApplicationException;
 import Utils.DateUtils;
 //import com.avi.coupons.utils.JdbcUtils;
 
-public class UsersDao {
+public class UsersDAO {
 	
 
 	public long createUser(User user) throws ApplicationException {

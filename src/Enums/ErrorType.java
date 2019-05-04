@@ -3,7 +3,8 @@ package Enums;
 public enum ErrorType {
 GENERAL_ERROR(600, "General error"),
 NAME_IS_ALREADY_EXISTS(600, "The name you chose is already exist. Please pick another name"),
-INVALID_NAME(600, "Customer does not exist with this name"),
+USER_TYPE_MISMATCH(600, "User type does is not persistant (customer with companyID)"),
+INVALID_NAME(600, "User does not exist with this name"),
 INVALID_ID(600, "The ID you've enter is invalid"),
 INVALID_AMOUNT(600,"The amount you've entered is invalid"),
 INVALID_PRICE(600,"The price you've entered is invalid"),

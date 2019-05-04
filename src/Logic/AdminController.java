@@ -9,8 +9,6 @@ import JavaBeans.Customer;
 /**
  * object returned when user logs in as admin. in charge of login and DBDAO actions for admins. 
  *
- * @param  password hard-coded admin password for test
- * @param email hard-coded admin email for test
  * @see         JavaBeans.Company
  * @see 		JavaBeans.Customer
  */
@@ -18,29 +16,7 @@ import JavaBeans.Customer;
 public class AdminController extends ClientController{
 
 	
-	private String password = "admin";
-	private String email = "admin@admin.com";
 	
-	/**
-	 * compares input mail and pass to hard coded parameters and returns error when fails
-	 *
-	 * @param  mail mail used to login
-	 * @param pass password used to login
-	 * @throws wrong mail\password
-	 */
-	
-	public void login(String mail, String pass) {
-		try {
-			if (pass!=password || mail!=email) {
-				throw new Exception("wrong mail/password");
-			}
-			
-			}
-			catch(Exception Ex){
-				 System.out.println(Ex.getMessage());
-
-			}
-	} 
 	/**
 	 *adds a new company to the DB using the DBDAO.
 	 *
@@ -82,7 +58,7 @@ public class AdminController extends ClientController{
 					throw new Exception("Company does not exist!");
 				}
 				
-			if (companiesDBDAO.getCompanyByID(company.getId()).getName()!= company.getName()) {
+			if (companiesDBDAO.getCompanyByID(company.getCompanyID()).getName()!= company.getName()) {
 				throw new Exception("Company name cannot be changed!");
 			}
 			else {
@@ -112,15 +88,15 @@ public class AdminController extends ClientController{
 					throw new Exception("Company does not exist!");
 				}
 				//remove company from DB
-				companiesDBDAO.deleteCompany(company.getId());
+				companiesDBDAO.deleteCompany(company.getCompanyID());
 				
 				//find company coupons
-				ArrayList<JavaBeans.Coupon> coupons = companiesDBDAO.getCouponsByCompanyID(company.getId());
+				ArrayList<JavaBeans.Coupon> coupons = couponsDBDAO.getCompanyCoupons(company.getCompanyID());
 				
 				//remove all company coupons and customer purchases
 				for (JavaBeans.Coupon c : coupons) {
 					couponsDBDAO.deleteCoupon(c.getId());
-					couponsDBDAO.deleteCouponPurchase(c.getId(), -1);
+					purchasesDBDAO.deletePurchaseBycouponId(c.getId());
 				}
 				
 				

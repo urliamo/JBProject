@@ -5,13 +5,13 @@ import Utils.JdbcUtils;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
+//import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 
 import Exceptions.ApplicationException;
 import Enums.ErrorType;
-import JavaBeans.Coupon;
+//import JavaBeans.Coupon;
 import JavaBeans.Customer;
 import Utils.DateUtils;
 
@@ -273,10 +273,10 @@ public class CustomerDAO implements ICustomerDAO {
 
 					if (resultSet.next()) {
 
-						customer = extractCustomerFromResultSet(resultSet);
-
-						return customer;
-					}
+						customer = extractCustomerFromResultSet(resultSet);	
+					}	
+					
+			return customer;
 		}
 		catch (SQLException e)
 		{
@@ -299,53 +299,7 @@ public class CustomerDAO implements ICustomerDAO {
 	 * @return 		ArrayList of coupons IDs belonging to this customer	
 	 */
 	
-	public Collection<Coupon> getAllCouponsByCustomer(int customerID) throws ApplicationException, InterruptedException {
-
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-		try {
-			connection =JdbcUtils.getConnection();
-			String sql = String.format("SELECT * FROM Coupons WHERE coupon_id =(SELECT coupon_id FROM Purchases WHERE customer_id=?)");
-			preparedStatement = connection.prepareStatement(sql);
-			preparedStatement.setLong(1,customerID);
-
-			resultSet = preparedStatement.executeQuery();
-
-					Collection<Coupon> customerCoupons = new ArrayList<Coupon>();
-					
-					while(resultSet.next()) {
-						 String description = resultSet.getString("DESCRIPTION");
-					     String image = resultSet.getString("IMAGE");
-					     String title = resultSet.getString("TITLE");
-					     long coupon_id = resultSet.getLong("coupon_id");
-					     int amount = resultSet.getInt("AMOUNT");
-					     LocalDate strat_date = resultSet.getDate("START_DATE").toLocalDate();
-					     LocalDate end_date = resultSet.getDate("END_DATE").toLocalDate();
-					     long company_id = resultSet.getLong("COMPANY_ID");
-					     int category_id = resultSet.getInt("CATEGORY_ID");
-					     double price = resultSet.getDouble("PRICE");
-						
 	
-						Coupon Coupon = new Coupon(description, image, title, coupon_id,amount,strat_date,end_date,company_id, category_id,price);
-						
-						customerCoupons.add(Coupon);
-					}
-					
-					return customerCoupons;
-				}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
-			//If there was an exception in the "try" block above, it is caught here and notifies a level above.
-			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
-					+" find customer coupons failed");
-		} 
-		
-		finally {
-			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
-		}
-	}
 	
 	
 	private Customer extractCustomerFromResultSet(ResultSet result) throws SQLException {
