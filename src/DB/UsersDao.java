@@ -194,6 +194,7 @@ public class UsersDAO {
 			JdbcUtils.closeResources(connection, preparedStatement);
 			}
 	}
+	
 	public Collection<User> getAllUsers() throws ApplicationException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
@@ -217,6 +218,56 @@ public class UsersDAO {
 			exception.printStackTrace();
 			throw new ApplicationException( exception, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
 					+" get All Users failed");
+		} finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
+	}
+	
+	public User getUserByMail(String email) throws ApplicationException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet result = null;
+
+		try {
+			connection = JdbcUtils.getConnection();
+			String getAllCompanies = "SELECT * FROM users where email=?";
+			preparedStatement = connection.prepareStatement(getAllCompanies);
+			preparedStatement.setString(1, email);
+			result = preparedStatement.executeQuery();
+
+			User user = extractUserFromResultSet(result);			
+
+			return user;
+
+		}catch (SQLException exception) {
+			exception.printStackTrace();
+			throw new ApplicationException( exception, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
+					+" get User by Mail failed");
+		} finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
+	}
+	
+	public User getUserByID(long id) throws ApplicationException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet result = null;
+
+		try {
+			connection = JdbcUtils.getConnection();
+			String getAllCompanies = "SELECT * FROM users where ID=?";
+			preparedStatement = connection.prepareStatement(getAllCompanies);
+			preparedStatement.setLong(1, id);
+			result = preparedStatement.executeQuery();
+
+			User user = extractUserFromResultSet(result);			
+
+			return user;
+
+		}catch (SQLException exception) {
+			exception.printStackTrace();
+			throw new ApplicationException( exception, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
+					+" get User by ID failed");
 		} finally {
 			JdbcUtils.closeResources(connection, preparedStatement);
 		}

@@ -31,7 +31,7 @@ public class LoginManager {
 	public ClientController login(String email, String password, ClientType clientType) {
 		switch (clientType) {
 		case Administrator:
-			AdminController administratorFacade = new AdminController();
+			CompanyController administratorFacade = new CompanyController();
 			try {
 			administratorFacade.login(email, password);
 			}
@@ -51,7 +51,7 @@ public class LoginManager {
 			}
 			return customerFacade;
 		case Company:
-			CompanyController companyFacade = new CompanyController();
+			CouponController companyFacade = new CouponController();
 			try {
 				companyFacade.login(email, password);
 			}

@@ -7,8 +7,8 @@ import Enums.ClientType;
 import JavaBeans.Company;
 import JavaBeans.Coupon;
 import JavaBeans.Customer;
-import Logic.AdminController;
 import Logic.CompanyController;
+import Logic.CouponController;
 import Logic.CustomerController;
 
 public class Test {
@@ -24,7 +24,7 @@ public class Test {
 		 ArrayList<Company> companies = new ArrayList<Company>();
 		 ArrayList<Customer> customers = new ArrayList<Customer>();
 
-		 Logic.AdminController aFacade = (AdminController) lManager.login("admin@admin.com", "admin", ClientType.Administrator);
+		 Logic.CompanyController aFacade = (CompanyController) lManager.login("admin@admin.com", "admin", ClientType.Administrator);
 			System.out.println("admin login successfull");
 
 		 Customer testCustomer = new Customer("McClain", "Jhon", "Jhon@McClain.com", "YippieKiYay", 1);
@@ -56,7 +56,7 @@ public class Test {
 		 aFacade.addCompany(testCompany);
 		 aFacade.addCustomer(testCustomer);
 		 
-		 Logic.CompanyController comFacade = (CompanyController) lManager.login("test@company.com","pass", ClientType.Company);
+		 Logic.CouponController comFacade = (CouponController) lManager.login("test@company.com","pass", ClientType.Company);
 		 Coupon coupon = new Coupon("test Coupon", "/images/Testimage.png", "testCoupon", 1, 2,LocalDate.of(2018,9,12), LocalDate.of(2020,1,1), testCompany.getId(), 1, 10.5);
 		 
 		 comFacade.addCoupon(coupon);

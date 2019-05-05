@@ -1,211 +1,139 @@
 package Logic;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Locale.Category;
+import java.util.Collection;
 
+import org.springframework.stereotype.Controller;
+
+import Enums.ErrorType;
+import Exceptions.ApplicationException;
 import JavaBeans.Company;
-import JavaBeans.Coupon;
+import Utils.EmailUtils;
+import Utils.NameUtils;
 
 
 /**
- * object returned when user logs in as Company. in charge of login and DBDAO actions for companies. 
+ * object returned when user logs in as admin. in charge of login and DBDAO actions for admins. 
  *
- * @param  companyID int containing the unique ID of the current company using this object instance.
  * @see         JavaBeans.Company
- * @see 		JavaBeans.Coupon
- * @see			Logic.LoginManager
+ * @see 		JavaBeans.Customer
  */
-public class CompanyController extends ClientController {
 
-	private int companyID;
-	
+@Controller
+public class CompanyController extends ClientController{
+
 	
 	/**
-	 * compares input mail and pass to companies DB and set the ID of the current instance to the returned companyID
+	 *adds a new company to the DB using the DBDAO.
 	 *
-	 * @param  email mail used to login
-	 * @param password password used to login
-	 * @see 		companiesDBDAO
-	 * @throws		wrong mail/password!
+	 * @param  company the new company to be added to the DB.
+	 * @see 		DB.companiesDBDAO
+	 * @see 		JavaBeans.Company
+	 * @throws company already exists!
 	 */
+	public long addCompany(JavaBeans.Company company) throws ApplicationException{
+		if (company == null) 
+		{
+			throw new ApplicationException(ErrorType.EMPTY, ErrorType.EMPTY.getInternalMessage());
+		}
+
+		NameUtils.isValidName(company.getName());
+		EmailUtils.isValidEmail(company.getEmail());
+
+		if (company.getCompanyID() != 0) {
+			throw new ApplicationException(ErrorType.COMPANY_ID_MUST_BE_ASSIGNED, ErrorType.COMPANY_ID_MUST_BE_ASSIGNED.getInternalMessage());
+		}
+		
+		if (!companiesDBDAO.isCompanyExistsByMailOrName(company.getEmail(), company.getName())) { 
+			throw new ApplicationException(ErrorType.NAME_IS_ALREADY_EXISTS, ErrorType.NAME_IS_ALREADY_EXISTS.getInternalMessage());
+		}
+			return companiesDBDAO.addCompany(company);
+		
+	}
 	
-	public void login(String email, String password){
-		try {
-			//check company mail\pass combination exists
-			if (!companiesDBDAO.isCompanyExists(email, password)) {
-				throw new Exception("wrong mail/password");
+	/**
+	 *updates an existing company in the DB using the DBDAO.
+	 *
+	 * @param  company the company to be updates
+	 * @see 		companiesDBDAO
+	 * @see 		JavaBeans.Company
+	 * @throws 		company does not exist!
+	 * @throws 		company name cannot be updated!
+	 */
+	public void updateCompany(JavaBeans.Company company) throws ApplicationException{
+		
+				if (!companiesDBDAO.isCompanyExists(company.getEmail(), company.getName())) {
+					throw new ApplicationException(ErrorType.COMPANY_ID_DOES_NOT_EXIST, ErrorType.COMPANY_ID_DOES_NOT_EXIST.getInternalMessage());
+				}
+				
+			if (companiesDBDAO.getCompanyByID(company.getCompanyID()).getName()!= company.getName()) {
+				throw new ApplicationException(ErrorType.NAME_IS_IRREPLACEABLE, ErrorType.NAME_IS_IRREPLACEABLE.getInternalMessage());
 			}
-			//return the ID for the logged-in company
-			this.setCompanyID(companiesDBDAO.getCompanyID(email, password));
+			else {
+				companiesDBDAO.updateCompany(company);
+			}
 			
+	
+	}
+	
+	/**
+	 *removes an existing company from the DB using the DBDAO.
+	 *<P>
+	 *this also removes any coupons belonging to the company.
+	 *
+	 * @param  company the company to be removed
+	 * @see 		companiesDBDAO
+	 * @see 		JavaBeans.Company
+	 * @throws 		company does not exist!
+	 */
+		public void deleteCompany(JavaBeans.Company company) throws ApplicationException{
+			try {
+				if (!companiesDBDAO.isCompanyExists(company.getEmail(), company.getName())) {
+					throw new ApplicationException(ErrorType.COMPANY_ID_DOES_NOT_EXIST, ErrorType.COMPANY_ID_DOES_NOT_EXIST.getInternalMessage());
+				}
+				//remove company from DB
+				companiesDBDAO.deleteCompany(company.getCompanyID());
+				
+				//find company coupons
+				Collection<JavaBeans.Coupon> coupons = couponsDBDAO.getCompanyCoupons(company.getCompanyID());
+				
+				//remove all company coupons and customer purchases
+				for (JavaBeans.Coupon c : coupons) {
+					couponsDBDAO.deleteCoupon(c.getId());
+					purchasesDBDAO.deletePurchaseBycouponId(c.getId());
+				}
+				
+				
+				
 			}
-			catch(Exception Ex){
+			catch(Exception Ex) {
 				 System.out.println(Ex.getMessage());
 
 			}
-	
-	}
-
-
-	public void setCompanyID(long l) {
-		this.companyID = l;
-	}
-
-	public CompanyController() {
-		super();
-	}
-
-	/**
-	 * adds a new coupon to the DB.
-	 * <p> 
-	 * this also checks for coupon validity of date or duplication.
-	 *
-	 * @param  coupon the new coupon to be added to the DB
-	 * @exception coupon already exists
-	 * @exception coupon starts after it expired
-	 * @exception coupon already expired
-	 * @see 		couponsDBDAO
-	 * @see			JavaBeans.Coupon
-	 */
-	
-	public void addCoupon(Coupon coupon) {
-		try {
-			
-			//get all company coupons
-			ArrayList<Coupon> coupons = companiesDBDAO.getCouponsByCompanyID(companyID);
-			for (Coupon c : coupons) {
-				//check if new coupon already exists for this company
-				if (c.getTitle() == coupon.getTitle())
-						throw new Exception("Coupon with this title already exists for this company");
-			}
-			//check coupon expiration date vs. start date
-			if (coupon.getStart_date().isAfter(coupon.getEnd_date()))
-			throw new Exception("This Coupon starts after it ends");
-			
-			if (LocalDate.now().isAfter(coupon.getEnd_date()))
-				throw new Exception("This Coupon already expired");
+		}
 		
-			//add coupon
-		couponsDBDAO.addCoupon(coupon);
-		System.out.println("coupon added");
+		/**
+		 *	returns an ArrayList of Company objects with all companies using the DBDAO.
+		 *
+		 * @see 		companiesDBDAO
+		 * @see 		JavaBeans.Company
+		 * @return		ArrayList of all companies
+		 */
+		public Collection<Company> getAllCompanies() throws Exception{
+			return companiesDBDAO.getAllCompanies();
 		}
-		catch(Exception Ex){
-			 System.out.println(Ex.getMessage());
-
-		}
-	}
-	
-	/**
-	 * updates an existing coupon in the DB.
-	 *
-	 * @param  coupon the  coupon to be added updated in the DB
-	 * @exception coupon does not exist
-	 * @see 		couponsDBDAO
-	 * @see			JavaBeans.Coupon
-	 */
-	public void updateCoupon(Coupon coupon){
-		try {
-			//check coupon with this id exists
-			if (!couponsDBDAO.isCouponExists(coupon.getId()))
-				throw new Exception("coupon with this ID does not exist!");
-				//update coupon
-		couponsDBDAO.updateCoupon(coupon);
-	}
-		catch(Exception Ex){
-			 System.out.println(Ex.getMessage());
-
-		}
-	}
-	
-	/**
-	 * removes a coupon from the DB.
-	 * <p>
-	 * this also removes any coupons purchased by customers
-	 * 
-	 * 
-	 * @param  coupon the coupon to be removed from the DB
-	 * @exception coupon does not exist!
-	 * @see 		couponsDBDAO
-	 * @see			JavaBeans.Coupon
-	 */
-	public void deleteCoupon(Coupon coupon) {
-		try {
-			//check if coupon actually exists
-			if (!couponsDBDAO.isCouponExists(coupon.getId()))
-				throw new Exception("coupon with this ID does not exist!");
-			
-		//delete coupon customer purchases
-		couponsDBDAO.deleteCouponPurchase(coupon.getId(), -1);	
-		//delete company coupon
-		couponsDBDAO.deleteCoupon(coupon.getId());
 		
-	}
-		catch(Exception Ex){
-			 System.out.println(Ex.getMessage());
-
+		/**
+		 *	returns a company of the specified ID
+		 *
+		 * @param		companyID long containing the ID of the company to be returned
+		 * @see 		companiesDBDAO
+		 * @see 		JavaBeans.Company
+		 * @return		Company object with the company data of the specified ID.
+		 */
+		public Company getCompany(long id) throws Exception{
+			return companiesDBDAO.getCompanyByID(id);
 		}
-	}
-	/**
-	 * returns all coupons belonging to this company.
-	 * 
-	 * @param  coupon the new coupon to be added to the DB
-	 * @see 		companiesDBDAO
-	 * @return ArrayList of coupon objects belonging to this company
-	 */
-	public ArrayList<Coupon> getCompanyCoupons() throws Exception{
-		return companiesDBDAO.getCouponsByCompanyID(companyID);
-	}
-	
-	/**
-	 * returns a list of all company coupons of a specified category
-	 * 
-	 * @param  Category the category of coupons to be returnes
-	 * @see 		companiesDBDAO
-	 * @see			JavaBeans.Coupon
-	 * @see			JavaBeans.Category
-	 * @return 		ArrayList of coupons
-	 */
-	public ArrayList<Coupon> getCompanyCoupons(Category category) throws Exception
-	{
-		//get list of all company coupons
-		ArrayList<Coupon> coupons = companiesDBDAO.getCouponsByCompanyID(companyID);
 
-		//remove coupons with different category from list
-		for (Coupon c : coupons) {
-			if (couponsDBDAO.getCouponCategory(c.getCategory_id())!=category)
-				coupons.remove(c);
-		}
-		return coupons;
+		
+ 	}
 
-	}
-	/**
-	 * returns a list of all company coupons of a specified max price
-	 * 
-	 * @param  maxprice the highest price of the returned coupons
-	 * @see 		companiesDBDAO
-	 * @see			JavaBeans.Coupon
-	 * @return ArrayList of coupons
-	 */
-	public ArrayList<Coupon> getCompanyCoupons(double maxprice) throws Exception{
-		ArrayList<Coupon> coupons = companiesDBDAO.getCouponsByCompanyID(companyID);
-
-		//remove coupons with higher price from returned list
-		for (Coupon c : coupons) {
-			if (c.getPrice()>maxprice)
-				coupons.remove(c);
-		}
-		return coupons;
-	}
-	/**
-	 * returns the DB data of the current company as a company object.
-	 * 
-	 * @see 		companiesDBDAO
-	 * @see			JavaBeans.Company
-	 * @return		Company object with this company data.
-	 */
-	//return the logged-in company
-	public Company getCompany() throws Exception{
-		return companiesDBDAO.getCompanyByID(companyID);
-	}
-}

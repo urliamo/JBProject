@@ -1,4 +1,4 @@
-package com.avi.coupons.logic;
+package Logic;
 
 public interface ICacheManager {
 	

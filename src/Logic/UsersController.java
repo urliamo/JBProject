@@ -2,16 +2,14 @@ package Logic;
 
 import java.util.Collection;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-
-import com.avi.coupons.utils.IdUtils;
-
+import DB.CompaniesDAO;
 import Enums.ClientType;
 import Enums.ErrorType;
 import Exceptions.ApplicationException;
 import JavaBeans.User;
 import JavaBeans.UserData;
+import Utils.NameUtils;
+import Utils.PasswordUtils;
 
 //import com.avi.coupons.beans.User;
 //import com.avi.coupons.beans.UserData;
@@ -30,6 +28,9 @@ public class UsersController {
 	
 	@Autowired
 	private DB.UsersDAO usersDao;
+	
+	@Autowired
+	private DB.CompaniesDAO companiesDAO;
 	
 	@Autowired
 	private ICacheManager cacheManager;
@@ -57,21 +58,21 @@ public class UsersController {
 	}
 
 	public long createUser(User user) throws ApplicationException {
-		if (user == null)
-			throw new ApplicationException(ErrorType.EMPTY.getMessage());
-
-		NameUtils.isValidName(user.getEmail());
+		if (user == null) {
+			throw new ApplicationException(ErrorType.EMPTY, ErrorType.EMPTY.getInternalMessage());
+		}
+		
+		NameUtils.isValidName(user.getUserName());
 		PasswordUtils.isValidPassword(user.getPassword());
-		TypeUtils.isValidType(user.getType());
 
-		if (usersDao.getUserByUserEmail(user.getEmail()) != null) {
-			throw new ApplicationException(ErrorType.NAME_IS_ALREADY_EXISTS.getMessage());
+		if (usersDao.getUserByMail(user.getEmail()) != null) {
+			throw new ApplicationException(ErrorType.EXISTING_EMAIL, ErrorType.EXISTING_EMAIL.getInternalMessage());
 		}
-		if ((user.getCompanyId() != 0 && user.getType().equals(ClientType.CUSTOMER))) {
-			throw new ApplicationException(ErrorType.USER_IS_CUSTOMER.getMessage());
+		if ((user.getCompanyId() != 0 && user.getType().equals(ClientType.Customer))) {
+			throw new ApplicationException(ErrorType.COMPANY_ID_NOT_TYPE, ErrorType.COMPANY_ID_NOT_TYPE.getInternalMessage());
 		}
-		if (user.getCompanyId() == 0 && user.getType().equals(ClientType.COMPANY)) {
-			throw new ApplicationException(ErrorType.USER_IS_COMPNAY.getMessage());
+		if (user.getCompanyId() == 0 && user.getType().equals(ClientType.Company)) {
+			throw new ApplicationException(ErrorType.COMPANY_TYPE_NO_ID, ErrorType.COMPANY_TYPE_NO_ID.getInternalMessage());
 		}
 		return usersDao.createUser(user);
 	}
@@ -80,34 +81,30 @@ public class UsersController {
 
 	public void updateUser(User user) throws ApplicationException {
 
-		IdUtils.isValidId(user.getId());
 		NameUtils.isValidName(user.getEmail());
 		PasswordUtils.isValidPassword(user.getPassword());
-		TypeUtils.isValidType(user.getType());
 
-		if (usersDao.(user.getId()) == null) {
-			throw new ApplicationException(ErrorType.USER_IS_NOT_EXISTS.getMessage());
+		if (usersDao.getUserByID(user.getId()) == null) {
+			throw new ApplicationException(ErrorType.USER_ID_DOES_NOT_EXIST, ErrorType.USER_ID_DOES_NOT_EXIST.getInternalMessage());
 		}
 		usersDao.updateUser(user);
 	}
 
 	public void deleteUser(long userId) throws ApplicationException {
 
-		IdUtils.isValidId(userId);
 
-		if (usersDao.getUserByUserID(userId) == null) {
-			throw new ApplicationException(ErrorType.USER_IS_NOT_EXISTS.getMessage());
+		if (usersDao.getUserByID(userId) == null) {
+			throw new ApplicationException(ErrorType.USER_ID_DOES_NOT_EXIST, ErrorType.USER_ID_DOES_NOT_EXIST.getInternalMessage());
 		}
-		usersDao.deleteUser(userId);
+		usersDao.deleteUserByID(userId);
 
 	}
 
-	public void deleteUserByCompanyId(long companyId) throws ApplicationException {
+	public void deleteUsersByCompanyId(long companyId) throws ApplicationException {
 
-		IdUtils.isValidId(companyId);
 
-		if (usersDao.getUserByUserID(companyId) == null) {
-			throw new ApplicationException(ErrorType.USER_IS_NOT_EXISTS.getMessage());
+		if ( companiesDAO.getCompanyByID(companyId) == null) {
+			throw new ApplicationException(ErrorType.COMPANY_ID_DOES_NOT_EXIST, ErrorType.COMPANY_ID_DOES_NOT_EXIST.getInternalMessage());
 		}
 		usersDao.deleteCompanysUsers(companyId);
 

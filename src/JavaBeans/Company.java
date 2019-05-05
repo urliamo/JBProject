@@ -3,7 +3,7 @@ public class Company {
 
     private String name;
     private String email;
-    private long company_id;
+    private long company_id=0;
     
     
 

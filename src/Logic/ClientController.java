@@ -3,6 +3,7 @@ package Logic;
 import Enums.ClientType;
 import Exceptions.ApplicationException;
 
+
 /**
  * Parent class from which other facades inherit.
  *

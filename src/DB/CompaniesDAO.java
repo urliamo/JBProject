@@ -143,17 +143,8 @@ public class CompaniesDAO implements ICompaniesDAO {
 			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1,email);
 			preparedStatement.setString(2,name);
-				ResultSet resultSet = preparedStatement.executeQuery();
-
-					if(!resultSet.next())
-					{
-							throw new ApplicationException(ErrorType.INVALID_EMAIL_OR_PASS,"company does not exist!");
-					}
-					else
-					{
-						return true;
-					}
-				
+			ResultSet resultSet = preparedStatement.executeQuery();
+			return(resultSet.next());
 			
 		}
 		catch (SQLException e)

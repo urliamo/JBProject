@@ -155,16 +155,6 @@ import Utils.JdbcUtils;
 
 		try {
 
-			if (Coupon.getStart_date().isAfter(Coupon.getEnd_date()))
-			{
-				throw new ApplicationException(ErrorType.INVALID_DATES, "coupon starts after it ends");
-
-			}
-			if (LocalDate.now().isAfter(Coupon.getEnd_date()))
-			{
-				throw new ApplicationException(ErrorType.INVALID_DATES, "coupon already expired");
-
-			}
 			
 			connection =JdbcUtils.getConnection();
 
@@ -198,6 +188,35 @@ import Utils.JdbcUtils;
 		}
 	}
 
+	public void changeCouponAmount(long couponId, int amount) throws ApplicationException {
+
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+
+		try {
+
+			connection =JdbcUtils.getConnection();
+
+			String sql = String.format(
+					"UPDATE Coupons SET amount = amount-? where couponID = ?");
+
+			preparedStatement = connection.prepareStatement(sql);	
+			preparedStatement.setInt(1,amount);
+			preparedStatement.setLong(2,couponId);
+				preparedStatement.executeUpdate();
+			
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			//If there was an exception in the "try" block above, it is caught here and notifies a level above.
+			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
+					+" update coupon failed");
+		} 
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement);
+		}
+	}
 	/**
 	 * removes a coupon from the DB.
 	 * 
@@ -462,6 +481,44 @@ import Utils.JdbcUtils;
 			String sql = String.format("SELECT * FROM Coupons WHERE company_id=?");
 			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setLong(1,companyID);
+
+			resultSet = preparedStatement.executeQuery();
+
+					Collection<Coupon> customerCoupons = new ArrayList<Coupon>();
+					
+					while(resultSet.next()) {
+						
+						Coupon coupon = extractCouponFromResultSet(resultSet);
+
+						customerCoupons.add(coupon);
+					}
+					
+					return customerCoupons;
+				}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+			//If there was an exception in the "try" block above, it is caught here and notifies a level above.
+			throw new ApplicationException(e, ErrorType.GENERAL_ERROR, DateUtils.getCurrentDateAndTime()
+					+" find customer coupons failed");
+		} 
+		
+		finally {
+			JdbcUtils.closeResources(connection, preparedStatement, resultSet);
+		}
+	}
+	public Collection<Coupon> getCompanyCouponsByTitle(long companyID, String title) throws ApplicationException, InterruptedException {
+
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+		try {
+			connection =JdbcUtils.getConnection();
+			String sql = String.format("SELECT * FROM Coupons WHERE company_id=? && title=?");
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setLong(1,companyID);
+			preparedStatement.setString(2,title);
+
 
 			resultSet = preparedStatement.executeQuery();
 

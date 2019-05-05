@@ -1,4 +1,4 @@
-package com.avi.coupons.logic;
+package Logic;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,11 +6,11 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 @Component
-public class HartaCacheManager implements ICacheManager{
+public class CacheManager implements ICacheManager{
 	
 	private Map<Object, Object> map;
 	
-	public HartaCacheManager() {
+	public CacheManager() {
 		this.map = new HashMap<Object, Object>();
 	}
 

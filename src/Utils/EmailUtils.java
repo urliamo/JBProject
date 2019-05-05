@@ -1,24 +1,25 @@
-package com.avi.coupons.utils;
+package Utils;
 
 import java.util.regex.Pattern;
 
-import com.avi.coupons.enums.ErrorType;
-import com.avi.coupons.exceptions.CouponsProjectExceptions;
+import Enums.ErrorType;
+import Exceptions.ApplicationException;
 
 public class EmailUtils {
 
 	/**
-	 * @param email This function receive a email and check if valid (by some
-	 *              definitions)
-	 * @throws ApplicationException Throw an exception by name
+	 * @param email This function receives an email String and checks if valid 
+	 * 
+	 * @throws ApplicationException Throw an exception for invalid\empty mail
 	 */
-	public static void isValidEmail(String email) throws CouponsProjectExceptions {
+	
+	public static void isValidEmail(String email) throws ApplicationException {
 			Pattern ptr = Pattern.compile("^([\\w-\\.]+){1,64}@([\\w&&[^_]]+){2,255}.[a-z]{2,}$");
 					if (!ptr.matcher(email).matches())
-						throw new CouponsProjectExceptions(ErrorType.INVALID_EMAIL.getMessage());
+						throw new ApplicationException(ErrorType.INVALID_EMAIL, ErrorType.INVALID_EMAIL.getInternalMessage());
 		
 		if (email == null || email.isEmpty())
-			throw new CouponsProjectExceptions(ErrorType.EMPTY.getMessage());
+			throw new ApplicationException(ErrorType.EMPTY, ErrorType.EMPTY.getInternalMessage());
 	}
 
 }
